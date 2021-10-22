@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/groupView"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/black"
+    android:orientation="vertical">
+
+    <com.hhkj.vgsbyhhkjnew.CoreView
+        android:id="@+id/parentView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+</LinearLayout>
