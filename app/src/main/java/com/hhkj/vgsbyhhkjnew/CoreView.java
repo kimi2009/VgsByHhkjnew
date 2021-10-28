@@ -51,16 +51,16 @@ public class CoreView extends View {
     }
 
     // 线画笔
-    private Paint whitePaint;
+    private Paint magicPaint;
 
 
     private void init() {
         System.out.println("===init");
-        whitePaint = new Paint();
-        whitePaint.setAntiAlias(true);
-        whitePaint.setStrokeWidth(0);
-        whitePaint.setStyle(Paint.Style.STROKE);
-        whitePaint.setColor(Color.parseColor("#FFFFFFFF"));
+        magicPaint = new Paint();
+        magicPaint.setAntiAlias(true);
+        magicPaint.setStrokeWidth(0);
+        magicPaint.setStyle(Paint.Style.STROKE);
+        magicPaint.setColor(Color.parseColor("#FFFFFFFF"));
         initData();
     }
 
@@ -310,7 +310,8 @@ public class CoreView extends View {
                     textGeometry.getValue()[3] = scal * (baseY + shape.y + y1textGeometry + y2textGeometry);
                     break;
             }
-        }    }
+        }
+    }
 
     //画图
     private void drawVgsView(Canvas canvas, ArrayList<Shape> shapeLists) {
@@ -338,9 +339,12 @@ public class CoreView extends View {
                     float rotateCenterX = floats[0] + (floats[floats.length - 2] - floats[0]) / 2;
                     float rotateCenterY = floats[1] + (floats[floats.length - 1] - floats[1]) / 2;
                     canvas.rotate(shape.angle, rotateCenterX, rotateCenterY);
-                    line.getColor();
+                    if (!TextUtils.isEmpty(line.getColor())) {
+                        magicPaint.setColor(Color.parseColor(line.getColor()));
+                    }
                     //画
-                    canvas.drawLines(floats, whitePaint);
+                    canvas.drawLines(floats, magicPaint);
+
                     break;
                 case 2://2.多边形
                     PolygonGeometry polygonGeometry = (PolygonGeometry) shape.getStar();
@@ -354,8 +358,11 @@ public class CoreView extends View {
                     //计算旋转中心：多边形的旋转中心为包围多边形的矩形中心，需要计算矩形的顶点坐标，再计算矩形中心点
                     Point p = playpolygonCenterPoint(polygonGeometry.getPolygonGeometryPointsValue());
                     canvas.rotate(shape.angle, p.getX(), p.getY());
+                    if (!TextUtils.isEmpty(polygonGeometry.getColor())) {
+                        magicPaint.setColor(Color.parseColor(polygonGeometry.getColor()));
+                    }
                     //画
-                    canvas.drawLines(floats1, whitePaint);
+                    canvas.drawLines(floats1, magicPaint);
                     break;
                 case 3://3.矩形
                     RectGeometry rectGeometry = (RectGeometry) shape.getStar();
@@ -364,7 +371,14 @@ public class CoreView extends View {
                     }
                     Point p1 = playRectCenterPoint(rectGeometry.getValue());
                     canvas.rotate(shape.angle, p1.getX(), p1.getY());
-                    canvas.drawRect(new RectF(rectGeometry.getValue()[0], rectGeometry.getValue()[1], rectGeometry.getValue()[2], rectGeometry.getValue()[3]), whitePaint);
+                    if (!TextUtils.isEmpty(rectGeometry.getColor())) {
+                        magicPaint.setColor(Color.parseColor(rectGeometry.getColor()));
+                    }
+                    if(shape.getFill()){
+                        magicPaint.setStyle(Paint.Style.FILL);
+                        magicPaint.setColor(Color.parseColor(shape.fillColor));
+                    }
+                    canvas.drawRect(new RectF(rectGeometry.getValue()[0], rectGeometry.getValue()[1], rectGeometry.getValue()[2], rectGeometry.getValue()[3]), magicPaint);
                     break;
                 case 4://4.椭圆
                     EllipseGeometry ellipseGeometry = (EllipseGeometry) shape.getStar();
@@ -373,7 +387,14 @@ public class CoreView extends View {
                     }
                     Point p1ellipseGeometry = playRectCenterPoint(ellipseGeometry.getValue());
                     canvas.rotate(shape.angle, p1ellipseGeometry.getX(), p1ellipseGeometry.getY());
-                    canvas.drawOval(new RectF(ellipseGeometry.getValue()[0], ellipseGeometry.getValue()[1], ellipseGeometry.getValue()[2], ellipseGeometry.getValue()[3]), whitePaint);
+                    if (!TextUtils.isEmpty(ellipseGeometry.getColor())) {
+                        magicPaint.setColor(Color.parseColor(ellipseGeometry.getColor()));
+                    }
+                    if(shape.getFill()){
+                        magicPaint.setStyle(Paint.Style.FILL);
+                        magicPaint.setColor(Color.parseColor(shape.fillColor));
+                    }
+                    canvas.drawOval(new RectF(ellipseGeometry.getValue()[0], ellipseGeometry.getValue()[1], ellipseGeometry.getValue()[2], ellipseGeometry.getValue()[3]), magicPaint);
                     break;
                 case 5://5.文字
                     TextGeometry textGeometry = (TextGeometry) shape.getStar();
@@ -382,24 +403,29 @@ public class CoreView extends View {
                     }
                     Point p1textGeometry = playRectCenterPoint(textGeometry.getValue());
                     canvas.rotate(shape.angle, p1textGeometry.getX(), p1textGeometry.getY());
-                    whitePaint.setTextSize(textGeometry.getScalTextSize());
-
+                    magicPaint.setTextSize(textGeometry.getScalTextSize());
                     RectF rectF = new RectF(textGeometry.getValue()[0], textGeometry.getValue()[1], textGeometry.getValue()[2], textGeometry.getValue()[3]);
-                    //canvas.drawRect(rectF, whitePaint);
+                    //canvas.drawRect(rectF, magicPaint);
                     //计算baseline
-                    Paint.FontMetrics fontMetrics = whitePaint.getFontMetrics();
+                    Paint.FontMetrics fontMetrics = magicPaint.getFontMetrics();
                     float distance = (fontMetrics.bottom - fontMetrics.top) / 2 - fontMetrics.bottom;
                     float baseline = rectF.centerY() + distance;
+                    if (!TextUtils.isEmpty(textGeometry.getColor())) {
+                        magicPaint.setColor(Color.parseColor(textGeometry.getColor()));
+                    }
                     if (textGeometry.getTextAlign().equals("1")) {
-                        whitePaint.setTextAlign(Paint.Align.CENTER);
-                        canvas.drawText(textGeometry.getText(), p1textGeometry.getX(), baseline, whitePaint);
+                        magicPaint.setTextAlign(Paint.Align.CENTER);
+                        canvas.drawText(textGeometry.getText(), p1textGeometry.getX(), baseline, magicPaint);
                     } else if (textGeometry.getTextAlign().equals("2")) {
-                        whitePaint.setTextAlign(Paint.Align.RIGHT);
-                        canvas.drawText(textGeometry.getText(), textGeometry.getValue()[2], baseline, whitePaint);
+                        magicPaint.setTextAlign(Paint.Align.RIGHT);
+                        canvas.drawText(textGeometry.getText(), textGeometry.getValue()[2], baseline, magicPaint);
                     }
 
                     break;
             }
+            //重置画笔颜色
+            magicPaint.setColor(Color.parseColor("#FFFFFFFF"));
+            magicPaint.setStyle(Paint.Style.STROKE);
             canvas.restore();
         }
 

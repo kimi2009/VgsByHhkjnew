@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Environment;
+import android.text.TextUtils;
 import android.view.View;
 import android.widget.Button;
 
@@ -177,7 +178,7 @@ public class MainActivity extends AppCompatActivity {
     private void ppp(ArrayList<Shape> shapes) {
         for (int i = 0; i < shapes.size(); i++) {
             if (shapes.get(i).getType() == 1) {
-                System.out.println("=哈哈===:" + i + ";" + shapes.get(i).id);
+                System.out.println("====:" + i + ";" + shapes.get(i).id);
             } else if (shapes.get(i).getType() == 0) {
                 ppp(shapes.get(i).shapes);
             }
@@ -223,6 +224,22 @@ public class MainActivity extends AppCompatActivity {
                                         }
                                     }
                                     break;
+                                case "ShapeStyleComponent":
+                                    for (int m = 0; m < son5.getSons().size(); m++) {
+                                        Entity son6 = son5.getSons().get(m);
+                                        if (son6.getName().equals("Properties")) {
+                                            HashMap<String, String> otherParameters5 = son6.getOtherParameters();
+                                            //将数字转为16进制的色值
+                                            if (!otherParameters5.get("LineColor").equals("-1")) {
+                                                shape.setLineColor(Integer.toHexString(Integer.parseInt(otherParameters5.get("LineColor"))));
+                                                String color=Integer.toHexString(Integer.parseInt(otherParameters5.get("FillColor")));
+                                                shape.setFillColor("#" + color.substring(color.length() - 8, color.length()));
+                                                shape.setFill(Boolean.parseBoolean(otherParameters5.get("IsFill")));
+                                            }
+
+                                        }
+                                    }
+                                    break;
                                 case "GeometryComponent"://组合
                                     shape.setType(0);
                                     break;
@@ -232,8 +249,10 @@ public class MainActivity extends AppCompatActivity {
                                         if (son6.getName().equals("Properties")) {
                                             Line line = new Line();
                                             line.setPoints(son6.getOtherParameters().get("Points"));
-
-                                            line.setColor();
+                                            if (!TextUtils.isEmpty(shape.getLineColor())) {
+                                                String color = shape.getLineColor();
+                                                line.setColor("#" + color.substring(color.length() - 8, color.length()));
+                                            }
                                             shape.setStar(line);
                                             shape.setType(1);
                                         }
@@ -246,6 +265,10 @@ public class MainActivity extends AppCompatActivity {
                                         if (son6.getName().equals("Properties")) {
                                             PolygonGeometry polygonGeometry = new PolygonGeometry();
                                             polygonGeometry.setPoints(son6.getOtherParameters().get("Points"));
+                                            if (!TextUtils.isEmpty(shape.getLineColor())) {
+                                                String color = shape.getLineColor();
+                                                polygonGeometry.setColor("#" + color.substring(color.length() - 8, color.length()));
+                                            }
                                             shape.setStar(polygonGeometry);
                                             shape.setType(2);
                                         }
@@ -256,6 +279,10 @@ public class MainActivity extends AppCompatActivity {
                                         Entity son6 = son5.getSons().get(i);
                                         if (son6.getName().equals("Properties")) {
                                             RectGeometry rectGeometry = new RectGeometry();
+                                            if (!TextUtils.isEmpty(shape.getLineColor())) {
+                                                String color = shape.getLineColor();
+                                                rectGeometry.setColor("#" + color.substring(color.length() - 8, color.length()));
+                                            }
                                             rectGeometry.setRectHeight(son6.getOtherParameters().get("RectHeight"));
                                             rectGeometry.setRectWidth(son6.getOtherParameters().get("RectWidth"));
                                             rectGeometry.setRectLeft(son6.getOtherParameters().get("RectLeft"));
@@ -270,6 +297,10 @@ public class MainActivity extends AppCompatActivity {
                                         Entity son6 = son5.getSons().get(i);
                                         if (son6.getName().equals("Properties")) {
                                             EllipseGeometry ellipseGeometry = new EllipseGeometry();
+                                            if (!TextUtils.isEmpty(shape.getLineColor())) {
+                                                String color = shape.getLineColor();
+                                                ellipseGeometry.setColor("#" + color.substring(color.length() - 8, color.length()));
+                                            }
                                             ellipseGeometry.setRectHeight(son6.getOtherParameters().get("RectHeight"));
                                             ellipseGeometry.setRectWidth(son6.getOtherParameters().get("RectWidth"));
                                             ellipseGeometry.setRectLeft(son6.getOtherParameters().get("RectLeft"));
@@ -284,8 +315,14 @@ public class MainActivity extends AppCompatActivity {
                                         Entity son6 = son5.getSons().get(i);
                                         if (son6.getName().equals("Properties")) {
                                             TextGeometry textGeometry = new TextGeometry();
+                                            /*if (!TextUtils.isEmpty(shape.getLineColor())) {
+                                                String color = shape.getLineColor();
+                                                textGeometry.setColor("#"+color.substring(color.length() - 8, color.length()));
+                                            }*/
                                             textGeometry.setText(son6.getOtherParameters().get("Text"));
-                                            textGeometry.setColor(son6.getOtherParameters().get("TextFontColor"));
+
+                                            String color = Integer.toHexString(Integer.parseInt(son6.getOtherParameters().get("TextFontColor")));
+                                            textGeometry.setColor("#" + color.substring(color.length() - 8, color.length()));
                                             textGeometry.setTextSize(Float.parseFloat(son6.getOtherParameters().get("TextFontSize")));
                                             textGeometry.setTextAlign(son6.getOtherParameters().get("TextAlign"));
                                             textGeometry.setRectHeight(son6.getOtherParameters().get("RectHeight"));
@@ -315,6 +352,10 @@ public class MainActivity extends AppCompatActivity {
             }
         }
         shapes.add(shape);
+    }
+
+    private String hex10To16(int lineColor) {
+        return String.format("%08X", lineColor);
     }
 
 

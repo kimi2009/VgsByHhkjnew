@@ -15,6 +15,9 @@ public class Shape implements Serializable {
     public Float x;
     public Float y;
     public String id;
+    public Boolean isFill;
+    public String LineColor;
+    public String fillColor;
     public String ParentElementId;
     public BaseStar star;
     public ArrayList<Shape> shapes = new ArrayList<Shape>();
@@ -75,6 +78,22 @@ public class Shape implements Serializable {
         this.name = name;
     }
 
+    public String getLineColor() {
+        return LineColor;
+    }
+
+    public void setLineColor(String lineColor) {
+        LineColor = lineColor;
+    }
+
+    public String getFillColor() {
+        return fillColor;
+    }
+
+    public void setFillColor(String fillColor) {
+        this.fillColor = fillColor;
+    }
+
     public int getType() {
         return type;
     }
@@ -89,6 +108,14 @@ public class Shape implements Serializable {
 
     public void setTypeId(String typeId) {
         TypeId = typeId;
+    }
+
+    public Boolean getFill() {
+        return isFill;
+    }
+
+    public void setFill(Boolean fill) {
+        isFill = fill;
     }
 
 
