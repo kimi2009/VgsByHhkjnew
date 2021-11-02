@@ -21,6 +21,8 @@ public class ScrollGestureListener extends GestureDetector.SimpleOnGestureListen
 
     private float viewWidthReal = 0;
     private float viewHeightReal = 0;
+    private float xReal = 0;
+    private float yReal = 0;
 
     private float viewWidthRealTemp = 0;
     private float viewHeightRealTemp = 0;
@@ -115,8 +117,108 @@ public class ScrollGestureListener extends GestureDetector.SimpleOnGestureListen
         }
         return true;
     }
+
     //应该再获取到当前手指的中心点，这样放缩会根据手指的中心点进行放缩，此处需要优化
-    void setScale(float scale) {
+    void setScale1(float x, float y, float scale) {
+        xReal = x * scale;
+        yReal = y * scale;
+        viewWidthReal = viewWidthNormal * scale;
+        viewHeightReal = viewHeightNormal * scale;
+        if(scale!=1){
+            System.out.println("=====");
+        }
+        //如果view比group小
+        if (viewWidthReal < groupWidth) {
+            if (isFullGroup) {
+                distanceXTemp = 0;
+                targetView.setTranslationX(0);
+            }
+            maxTranslationLeft = targetView.getLeft() - (viewWidthReal - viewWidthNormal) / 2 ;
+            maxTranslationRight = (viewGroup.getWidth() - targetView.getRight()) - (viewWidthReal - viewWidthNormal) / 2;
+            //如果移动距离超过最大可移动距离
+            if (scale > this.scale && distanceXTemp < 0 && -distanceXTemp > maxTranslationLeft) {
+                float translate = (viewWidthReal - viewWidthRealTemp) / 2;
+                targetView.setTranslationX(targetView.getTranslationX() + translate+xReal);
+                distanceXTemp = distanceXTemp + translate+xReal;
+            } else if (scale > this.scale && distanceXTemp > 0 && distanceXTemp > maxTranslationRight) {
+                float translate = (viewWidthReal - viewWidthRealTemp) / 2;
+                targetView.setTranslationX(targetView.getTranslationX() - translate-xReal);
+                distanceXTemp = distanceXTemp - translate-xReal;
+            }
+
+        } else {
+            maxTranslationLeft = (viewWidthReal - viewWidthNormal) / 2 - (viewGroup.getWidth() - targetView.getRight());
+            maxTranslationRight = (viewWidthReal - viewWidthNormal) / 2 - targetView.getLeft();
+            if (scale < this.scale && distanceXTemp < 0 && -distanceXTemp > maxTranslationLeft) {
+                float translate = (viewWidthRealTemp - viewWidthReal) / 2;
+                targetView.setTranslationX(targetView.getTranslationX() + translate+xReal);
+                distanceXTemp = distanceXTemp + translate+xReal;
+            } else if (scale < this.scale && distanceXTemp > 0 && distanceXTemp > maxTranslationRight) {
+                float translate = (viewWidthRealTemp - viewWidthReal) / 2;
+                targetView.setTranslationX(targetView.getTranslationX() - translate-xReal);
+                distanceXTemp = distanceXTemp - translate-xReal;
+            }
+        }
+
+        if (viewHeightReal < groupHeight) {
+            maxTranslationTop = targetView.getTop() - (viewHeightReal - viewHeightNormal) / 2;
+            maxTranslationBottom = (viewGroup.getHeight() - targetView.getBottom()) - (viewHeightReal - viewHeightNormal) / 2;
+            if (isFullGroup) {
+                distanceYTemp = 0;
+                targetView.setTranslationY(0);
+            }
+            //如果移动距离超过最大可移动距离
+            if (scale > this.scale && distanceYTemp < 0 && -distanceYTemp > maxTranslationTop) {
+                float translate = (viewHeightReal - viewHeightRealTemp) / 2;
+                targetView.setTranslationY(targetView.getTranslationY() + translate+yReal);
+                distanceYTemp = distanceYTemp + translate+yReal;
+            } else if (scale > this.scale && distanceYTemp > 0 && distanceYTemp > maxTranslationBottom) {
+                float translate = (viewHeightReal - viewHeightRealTemp) / 2;
+                targetView.setTranslationY(targetView.getTranslationY() - translate-yReal);
+                distanceYTemp = distanceYTemp - translate-yReal;
+            }
+        } else {
+            maxTranslationTop = (viewHeightReal - viewHeightNormal) / 2 - (viewGroup.getHeight() - targetView.getBottom());
+            maxTranslationBottom = (viewHeightReal - viewHeightNormal) / 2 - targetView.getTop();
+            if (scale < this.scale && distanceYTemp < 0 && -distanceYTemp > maxTranslationTop) {
+                float translate = (viewHeightRealTemp - viewHeightReal) / 2;
+                targetView.setTranslationY(targetView.getTranslationY() + translate+yReal);
+                distanceYTemp = distanceYTemp + translate+yReal;
+            } else if (scale < this.scale && distanceYTemp > 0 && distanceYTemp > maxTranslationBottom) {
+                float translate = (viewHeightRealTemp - viewHeightReal) / 2;
+                targetView.setTranslationY(targetView.getTranslationY() - translate-yReal);
+                distanceYTemp = distanceYTemp - translate-yReal;
+            }
+        }
+        viewWidthRealTemp = viewWidthReal;
+        viewHeightRealTemp = viewHeightReal;
+        this.scale = scale;
+    }
+
+    @Override
+    public boolean onSingleTapUp(MotionEvent e) {
+        float left = viewWidthReal > groupWidth ? 0 : (targetView.getLeft() - ((viewWidthReal - viewWidthNormal) / 2));
+        float top = viewHeightReal > groupHeight ? 0 : (targetView.getTop() - ((viewHeightReal - viewHeightNormal) / 2));
+        float right = viewWidthReal > groupWidth ? groupWidth : viewGroup.getWidth() - ((viewGroup.getWidth() - targetView.getRight()) - (viewWidthReal - viewWidthNormal) / 2);
+        float bottom = viewHeightReal > groupHeight ? groupHeight : viewGroup.getHeight() - ((viewGroup.getHeight() - targetView.getBottom()) - (viewHeightReal - viewHeightNormal) / 2);
+        RectF rectF = new RectF(left, top, right, bottom);
+        if (rectF.contains(e.getX(), e.getY())) {
+            targetView.performClick();
+        }
+        return super.onSingleTapUp(e);
+    }
+
+    public boolean isFullGroup() {
+        return isFullGroup;
+    }
+
+    void setFullGroup(boolean fullGroup) {
+        isFullGroup = fullGroup;
+    }
+
+
+
+    void setScale(float x,float y,float scale) {
 
         viewWidthReal = viewWidthNormal * scale;
         viewHeightReal = viewHeightNormal * scale;
@@ -186,26 +288,5 @@ public class ScrollGestureListener extends GestureDetector.SimpleOnGestureListen
         viewWidthRealTemp = viewWidthReal;
         viewHeightRealTemp = viewHeightReal;
         this.scale = scale;
-    }
-
-    @Override
-    public boolean onSingleTapUp(MotionEvent e) {
-        float left = viewWidthReal > groupWidth ? 0 : (targetView.getLeft() - ((viewWidthReal - viewWidthNormal) / 2));
-        float top = viewHeightReal > groupHeight ? 0 : (targetView.getTop() - ((viewHeightReal - viewHeightNormal) / 2));
-        float right = viewWidthReal > groupWidth ? groupWidth : viewGroup.getWidth() - ((viewGroup.getWidth() - targetView.getRight()) - (viewWidthReal - viewWidthNormal) / 2);
-        float bottom = viewHeightReal > groupHeight ? groupHeight : viewGroup.getHeight() - ((viewGroup.getHeight() - targetView.getBottom()) - (viewHeightReal - viewHeightNormal) / 2);
-        RectF rectF = new RectF(left, top, right, bottom);
-        if (rectF.contains(e.getX(), e.getY())) {
-            targetView.performClick();
-        }
-        return super.onSingleTapUp(e);
-    }
-
-    public boolean isFullGroup() {
-        return isFullGroup;
-    }
-
-    void setFullGroup(boolean fullGroup) {
-        isFullGroup = fullGroup;
     }
 }

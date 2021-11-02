@@ -50,8 +50,15 @@ public class MainActivity extends AppCompatActivity {
         drawbyself.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(context, ViewActivity.class);
-                intent.putExtra("data", "");
+                Intent intent = new Intent(context, ZoomTestActivity.class);
+                startActivity(intent);
+            }
+        });
+        Button test = findViewById(R.id.test);
+        test.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(context, TestActivity.class);
                 startActivity(intent);
             }
         });

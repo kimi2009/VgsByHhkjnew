@@ -28,7 +28,7 @@ public class ViewActivity extends Activity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.view_activity);
-        ArrayList<Shape> shapes= (ArrayList<Shape>) getIntent().getSerializableExtra("data");
+        ArrayList<Shape> shapes = (ArrayList<Shape>) getIntent().getSerializableExtra("data");
         LinearLayout groupView = findViewById(R.id.groupView);
         CoreView coreView = findViewById(R.id.parentView);
         coreView.setData(shapes);

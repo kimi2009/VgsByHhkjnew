@@ -8,7 +8,6 @@ import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 
 /**
- * Created by 王德惠
  * Description :手势管理类
  */
 
@@ -49,7 +48,9 @@ public class GestureViewManager {
                     if (isScaleEnd) {
                         scaleGestureListener.onActionUp();
                     }
-                    scrollGestureListener.setScale(scaleGestureListener.getScale());
+                    if (event.getPointerCount() == 2) {
+                        scrollGestureListener.setScale((event.getX(0) + event.getX(1)) / 2, (event.getY(0) + event.getY(1)) / 2, scaleGestureListener.getScale());
+                    }
                     if (onScaleListener != null) {
 //                        onScaleListener.onScale(scaleGestureListener.getScale());
                     }

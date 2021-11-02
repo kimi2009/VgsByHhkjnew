@@ -12,7 +12,9 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.VgsByHhkjnew">
-        <activity android:name=".MainActivity" android:exported="true">
+        <activity
+            android:name=".MainActivity"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -22,6 +24,10 @@
         <activity
             android:name=".CadBridgeActivity"
             android:launchMode="standard"
+            android:screenOrientation="landscape" />
+        <activity android:name=".ZoomTestActivity" />
+        <activity
+            android:name=".TestActivity"
             android:screenOrientation="landscape" />
         <activity
             android:name=".ViewActivity"

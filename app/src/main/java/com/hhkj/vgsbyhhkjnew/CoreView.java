@@ -3,13 +3,17 @@ package com.hhkj.vgsbyhhkjnew;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.RectF;
 import android.graphics.Typeface;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.util.TypedValue;
+import android.view.MotionEvent;
+import android.view.ScaleGestureDetector;
 import android.view.View;
+import android.view.ViewTreeObserver;
 
 import androidx.annotation.Nullable;
 
@@ -35,7 +39,8 @@ import java.util.Collections;
  * @UpdateRemark:
  * @Version: 1.0
  */
-public class CoreView extends View {
+public class CoreView extends View implements ScaleGestureDetector.OnScaleGestureListener,
+        View.OnTouchListener, ViewTreeObserver.OnGlobalLayoutListener {
 
     public CoreView(Context context) {
         this(context, null);
@@ -43,11 +48,13 @@ public class CoreView extends View {
 
     public CoreView(Context context, @Nullable AttributeSet attrs) {
         this(context, attrs, 0);
+        init();//准备工作
+        this.setOnTouchListener(this);
     }
 
     public CoreView(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        init();//准备工作
+
     }
 
     // 线画笔
@@ -143,7 +150,6 @@ public class CoreView extends View {
                     yList.add(baseY + shape.y + Float.parseFloat(((TextGeometry) shape.getStar()).getRectTop()) + Float.parseFloat(((TextGeometry) shape.getStar()).getRectHeight()));
                     break;
             }
-
         }
     }
 
@@ -162,7 +168,7 @@ public class CoreView extends View {
 
     float scalpercent = 0.8f;
     float textpercent = 1.3f;
-
+    float initScale;
     private void doScaleValue() {
         System.out.println("===doScaleValue");
         int width = getWidth();
@@ -170,11 +176,11 @@ public class CoreView extends View {
         System.out.println("===width:" + width + ";height:" + height);
         float scalX = width / maxx;
         float scalY = height / maxy;
-        float scal = scalX > scalY ? scalY : scalX;
-        if (scal <= 1) {//图像过大，则进行缩小，图像过小，仅放大0.8倍
-            scale(0, scal, 0, 0, shapes);
+        initScale = scalX > scalY ? scalY : scalX;
+        if (initScale <= 1) {//图像过大，则进行缩小，图像过小，仅放大0.8倍
+            scale(0, initScale, 0, 0, shapes);
         } else {
-            scale(0, scal * scalpercent, 0, 0, shapes);
+            scale(0, initScale * scalpercent, 0, 0, shapes);
         }
     }
 
@@ -374,7 +380,7 @@ public class CoreView extends View {
                     if (!TextUtils.isEmpty(rectGeometry.getColor())) {
                         magicPaint.setColor(Color.parseColor(rectGeometry.getColor()));
                     }
-                    if(shape.getFill()){
+                    if (shape.getFill()) {
                         magicPaint.setStyle(Paint.Style.FILL);
                         magicPaint.setColor(Color.parseColor(shape.fillColor));
                     }
@@ -390,7 +396,7 @@ public class CoreView extends View {
                     if (!TextUtils.isEmpty(ellipseGeometry.getColor())) {
                         magicPaint.setColor(Color.parseColor(ellipseGeometry.getColor()));
                     }
-                    if(shape.getFill()){
+                    if (shape.getFill()) {
                         magicPaint.setStyle(Paint.Style.FILL);
                         magicPaint.setColor(Color.parseColor(shape.fillColor));
                     }
@@ -479,5 +485,33 @@ public class CoreView extends View {
     public int dp2px(float dp) {
         return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp,
                 getResources().getDisplayMetrics());
+    }
+
+    //----------------------------------------------------------------以下为图像放缩
+
+
+    @Override
+    public boolean onScale(ScaleGestureDetector scaleGestureDetector) {
+        return false;
+    }
+
+    @Override
+    public boolean onScaleBegin(ScaleGestureDetector scaleGestureDetector) {
+        return false;
+    }
+
+    @Override
+    public void onScaleEnd(ScaleGestureDetector scaleGestureDetector) {
+
+    }
+
+    @Override
+    public boolean onTouch(View view, MotionEvent motionEvent) {
+        return false;
+    }
+
+    @Override
+    public void onGlobalLayout() {
+
     }
 }
