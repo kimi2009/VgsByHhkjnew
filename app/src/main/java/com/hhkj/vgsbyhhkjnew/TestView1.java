@@ -61,19 +61,19 @@ public class TestView1 extends View implements ScaleGestureDetector.OnScaleGestu
     }
 
     ArrayList<bora> list;
-    private float ViewWidth; //  测量宽度 FreeView的宽度
-    private float ViewHeight; // 测量高度 FreeView的高度
+    private float viewWidth; //  测量宽度 FreeView的宽度
+    private float viewHeight; // 测量高度 FreeView的高度
 
     public void initData() {
         float h = getHeight();
         float w = getWidth();
         list = new ArrayList<bora>();
-        float k = 100f;
+        float k = 30f;
         for (int i = 1; i < 6; i++) {
-            list.add(new bora(i, new Float[]{i * k, i * k, w - i * k, h - i * k}));
+            list.add(new bora(i, new Float[]{i * k, i * k, w * 2 - i * k, h * 2 - i * k}));
         }
-        ViewWidth = w * 2;
-        ViewHeight = h * 2;
+        viewWidth = w * 2;
+        viewHeight = h * 2;
     }
 
     private int width; //  测量宽度 FreeView的宽度
@@ -84,6 +84,7 @@ public class TestView1 extends View implements ScaleGestureDetector.OnScaleGestu
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
         width = getMeasuredWidth();
         height = getMeasuredHeight();
+        Log.e(TAG, "width：" + width + ";height:" + height);
     }
 
     @Override
@@ -107,7 +108,6 @@ public class TestView1 extends View implements ScaleGestureDetector.OnScaleGestu
         if (lastScalSize > SCALE_MAX || lastScalSize < initScal) {
             return true;
         }
-
         return false;
     }
 
@@ -150,25 +150,51 @@ public class TestView1 extends View implements ScaleGestureDetector.OnScaleGestu
                     if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
                         // 偏移量的绝对值大于 3 为 滑动时间 并根据偏移量计算四点移动后的位置
                         l = (int) (getLeft() + dx);
-                        r = l + width;
+                        r = (int) (l + viewWidth);
                         t = (int) (getTop() + dy);
-                        b = t + height;
+                        b = (int) (t + viewHeight);
                         // 如果你的需求是可以划出边界 此时你要计算可以划出边界的偏移量
                         // 最大不能超过自身宽度或者是高度
-                        if(l<0){ // left 小于 0 就是滑出边界 赋值为 0 ; right 右边的坐标就是自身宽度 如果可以划出边界 left right top bottom 最小值的绝对值 不能大于自身的宽高
-                            l=0;
-                            r=l+width;
-                        }else if(r> width){ // 判断 right 并赋值
-                            r= width;
-                            l=r-width;
+                        if (dx < 0) {//往左滑动
+                            if (r < width) {
+                                r = width;
+                                l = (int) (width - viewWidth);
+                            }
+                        } else {
+                            if (l > 0) {
+                                l = 0;
+                                r = (int) viewWidth;
+                            }
                         }
-                        if(t<0){ // top
-                            t=0;
-                            b=t+height;
-                        }else if(b> height){ // bottom
-                            b= height;
-                            t=b-height;
+                        if (dy < 0) {
+                            if (b<height) {
+                                b=height;
+                                t= (int) (height-viewHeight);
+                            }
+                        } else {
+                            if (t>0) {
+                                t=0;
+                                b=(int)viewHeight;
+                            }
                         }
+                        /*if (l < 0) { // left 小于 0 就是滑出边界 赋值为 0 ; right 右边的坐标就是自身宽度 如果可以划出边界 left right top bottom 最小值的绝对值 不能大于自身的宽高
+                            l = 0;
+                            r = l + width;
+                        } else if (r > width) { // 判断 right 并赋值
+                            r = width;
+                            l = r - width;
+                        }
+                        if (t < 0) { // top
+                            t = 0;
+                            b = t + height;
+                        } else if (b > height) { // bottom
+                            b = height;
+                            t = b - height;
+                        }*/
+                       /* l = (int) (getLeft() + dx);
+                        r = (int) (l + ViewWidth);
+                        t = (int) (getTop() + dy);
+                        b = (int) (t + ViewHeight);*/
                         this.layout(l, t, r, b); // 重置view在layout 中位置
                         isDrag = true;  // 重置 拖动为 true
                     } else {
@@ -194,8 +220,6 @@ public class TestView1 extends View implements ScaleGestureDetector.OnScaleGestu
             x = x / pointerCount;
             y = y / pointerCount;//中心点
         }
-
-
         return true;
     }
 
