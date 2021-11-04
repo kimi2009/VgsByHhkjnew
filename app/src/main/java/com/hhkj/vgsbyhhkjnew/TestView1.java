@@ -33,9 +33,9 @@ import java.util.ArrayList;
  */
 public class TestView1 extends View implements ScaleGestureDetector.OnScaleGestureListener {
 
-    float initScal = 1f;
-    float SCALE_MAX = initScal * 20;//最大放大20倍
-    float lastScalSize = initScal;//上次停留的放缩大小
+    float viewLastScal = 2f;
+    float SCALE_MAX = viewLastScal * 25;//最大放大倍数
+    float SCALE_MIX = 1f;//最大放大倍数
     private ScaleGestureDetector mScaleGestureDetector = null;
 
     public TestView1(Context context) {
@@ -57,7 +57,7 @@ public class TestView1 extends View implements ScaleGestureDetector.OnScaleGestu
         magicPaint.setStrokeWidth(0);
         magicPaint.setStyle(Paint.Style.STROKE);
         magicPaint.setColor(Color.parseColor("#FFFFFFFF"));
-
+        initData();
     }
 
     ArrayList<bora> list;
@@ -65,36 +65,35 @@ public class TestView1 extends View implements ScaleGestureDetector.OnScaleGestu
     private float viewHeight; // 测量高度 FreeView的高度
 
     public void initData() {
-        float h = getHeight();
-        float w = getWidth();
-        list = new ArrayList<bora>();
-        float k = 30f;
-        for (int i = 1; i < 6; i++) {
-            list.add(new bora(i, new Float[]{i * k, i * k, w * 2 - i * k, h * 2 - i * k}));
-        }
-        viewWidth = w * 2;
-        viewHeight = h * 2;
+
     }
 
     private int width; //  测量宽度 FreeView的宽度
     private int height; // 测量高度 FreeView的高度
+    float k = 30f;
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
         width = getMeasuredWidth();
         height = getMeasuredHeight();
+        list = new ArrayList<bora>();
+        for (int i = 1; i < 6; i++) {
+            list.add(new bora(i, new Float[]{i * k, i * k, width * viewLastScal - i * k, height * viewLastScal - i * k}));
+        }
+        viewWidth = width * viewLastScal;
+        viewHeight = height * viewLastScal;
         Log.e(TAG, "width：" + width + ";height:" + height);
     }
 
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        initData();
+
         for (int i = 0; i < list.size(); i++) {
             canvas.drawRect(list.get(i).getValue()[0], list.get(i).getValue()[1], list.get(i).getValue()[2], list.get(i).getValue()[3], magicPaint);
         }
-        Log.e(TAG, "lf：" + getLeft() + ";tp:" + getTop() + "rg:" + getRight() + "bt:" + getBottom());
+        Log.e(TAG, "lf：" + getLeft() + ";tp:" + getTop() + ";rg:" + getRight() + ";bt:" + getBottom());
     }
 
     private static final String TAG = TestView1.class.getSimpleName();
@@ -104,11 +103,20 @@ public class TestView1 extends View implements ScaleGestureDetector.OnScaleGestu
     public boolean onScale(ScaleGestureDetector detector) {
         float scaleFactor = detector.getScaleFactor();
         Log.e(TAG, "scaleFactor：" + scaleFactor);
-        lastScalSize = lastScalSize * scaleFactor;
-        if (lastScalSize > SCALE_MAX || lastScalSize < initScal) {
-            return true;
+        viewLastScal = viewLastScal * scaleFactor;
+        Log.e(TAG, "lastScalSize：" + viewLastScal);
+        if (viewLastScal > SCALE_MAX || viewLastScal < SCALE_MIX) {
+            //超限，不做操作
+        } else {
+            for (int i = 0; i < list.size(); i++) {
+                list.get(i).value = new Float[]{i * k, i * k, width * viewLastScal - i * k, height * viewLastScal - i * k};
+            }
+            viewWidth = width * viewLastScal;
+            viewHeight = height * viewLastScal;
+            invalidate();
         }
-        return false;
+        return true;
+
     }
 
     @Override
@@ -126,25 +134,31 @@ public class TestView1 extends View implements ScaleGestureDetector.OnScaleGestu
     private boolean isDrag = false;
     private float downX; //点击时的x坐标
     private float downY;  // 点击时的y坐标
+    private long currentMS;
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         Log.e(TAG, "onTouch");
+        Log.e(TAG, "lf：" + getLeft() + ";tp:" + getTop() + "rg:" + getRight() + "bt:" + getBottom());
         // 拿到触摸点的个数
         final int pointerCount = event.getPointerCount();
         float x = 0, y = 0;
+        float dx = 0;
+        float dy = 0;
         if (pointerCount == 1) {
             switch (event.getAction()) {
                 case MotionEvent.ACTION_DOWN://单击
                     Log.e(TAG, "ACTION_DOWN==");
                     isDrag = false;
-                    downX = event.getX(); // 点击触屏时的x坐标 用于离开屏幕时的x坐标作计算
-                    downY = event.getY(); // 点击触屏时的y坐标 用于离开屏幕时的y坐标作计算
+                    downX = event.getRawX(); // 点击触屏时的x坐标 用于离开屏幕时的x坐标作计算
+                    downY = event.getRawY(); // 点击触屏时的y坐标 用于离开屏幕时的y坐标作计算
+                    currentMS = System.currentTimeMillis();//long currentMS     获取系统时间
                     break;
                 case MotionEvent.ACTION_MOVE://拖动
                     Log.e(TAG, "ACTION_MOVE");
-                    float dx = event.getX() - downX;
-                    float dy = event.getY() - downY;
+                    dx = event.getRawX() - downX;
+                    dy = event.getRawY() - downY;
+                    Log.e(TAG, "dx：" + dx + ";dy:" + dy);
                     int l, r, t, b; // 上下左右四点移动后的偏移量
                     //计算偏移量 设置偏移量 = 3 时 为判断点击事件和滑动事件的峰值
                     if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
@@ -153,6 +167,7 @@ public class TestView1 extends View implements ScaleGestureDetector.OnScaleGestu
                         r = (int) (l + viewWidth);
                         t = (int) (getTop() + dy);
                         b = (int) (t + viewHeight);
+                        Log.e(TAG, "l-：" + l + ";t-:" + t + ";r-:" + r + ";b-:" + b);
                         // 如果你的需求是可以划出边界 此时你要计算可以划出边界的偏移量
                         // 最大不能超过自身宽度或者是高度
                         if (dx < 0) {//往左滑动
@@ -167,45 +182,38 @@ public class TestView1 extends View implements ScaleGestureDetector.OnScaleGestu
                             }
                         }
                         if (dy < 0) {
-                            if (b<height) {
-                                b=height;
-                                t= (int) (height-viewHeight);
+                            if (b < height) {
+                                b = height;
+                                t = (int) (height - viewHeight);
                             }
                         } else {
-                            if (t>0) {
-                                t=0;
-                                b=(int)viewHeight;
+                            if (t > 0) {
+                                t = 0;
+                                b = (int) viewHeight;
                             }
                         }
-                        /*if (l < 0) { // left 小于 0 就是滑出边界 赋值为 0 ; right 右边的坐标就是自身宽度 如果可以划出边界 left right top bottom 最小值的绝对值 不能大于自身的宽高
-                            l = 0;
-                            r = l + width;
-                        } else if (r > width) { // 判断 right 并赋值
-                            r = width;
-                            l = r - width;
-                        }
-                        if (t < 0) { // top
-                            t = 0;
-                            b = t + height;
-                        } else if (b > height) { // bottom
-                            b = height;
-                            t = b - height;
-                        }*/
-                       /* l = (int) (getLeft() + dx);
-                        r = (int) (l + ViewWidth);
-                        t = (int) (getTop() + dy);
-                        b = (int) (t + ViewHeight);*/
+                        Log.e(TAG, "l：" + l + ";t:" + t + ";r:" + r + ";b:" + b);
+                        downX = event.getRawX();
+                        downY = event.getRawY();
                         this.layout(l, t, r, b); // 重置view在layout 中位置
+                        Log.e(TAG, "滑动事件");
                         isDrag = true;  // 重置 拖动为 true
                     } else {
-                        isDrag = false; // 小于峰值3时 为点击事件
+                        isDrag = false; //为点击事件
                     }
-                    /*mLastX = x;
-                    mLastY = y;*/
-                    invalidate();
+                    // invalidate();
                     break;
 
                 case MotionEvent.ACTION_UP:
+                    long moveTime = System.currentTimeMillis() - currentMS;//移动时间
+                    //判断是否继续传递信号
+                    if (moveTime < 200 && (Math.abs(dx) < 20 || Math.abs(dy) < 20)) {
+                        Log.e(TAG, "单击事件：x:" + event.getX() + ";Y:" + event.getY());
+                        isDrag = false; //为点击事件
+
+                        return true;
+                    }
+                    break;
                 case MotionEvent.ACTION_CANCEL:
                     Log.e(TAG, "ACTION_UP");
                     break;
@@ -219,6 +227,13 @@ public class TestView1 extends View implements ScaleGestureDetector.OnScaleGestu
             }
             x = x / pointerCount;
             y = y / pointerCount;//中心点
+            Log.e(TAG, "中心点：x：" + x + ";y:" + y);
+            //根据中心点移动view
+
+
+
+
+
         }
         return true;
     }
