@@ -14,6 +14,7 @@ import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.view.ViewTreeObserver;
+import android.view.animation.BounceInterpolator;
 
 import androidx.annotation.Nullable;
 
@@ -33,7 +34,7 @@ import java.util.ArrayList;
  */
 public class TestView1 extends View implements ScaleGestureDetector.OnScaleGestureListener {
 
-    float viewLastScal = 2f;
+    float viewLastScal = 1f;
     float SCALE_MAX = viewLastScal * 25;//最大放大倍数
     float SCALE_MIX = 1f;//最大放大倍数
     private ScaleGestureDetector mScaleGestureDetector = null;
@@ -71,6 +72,7 @@ public class TestView1 extends View implements ScaleGestureDetector.OnScaleGestu
     private int width; //  测量宽度 FreeView的宽度
     private int height; // 测量高度 FreeView的高度
     float k = 30f;
+    float minK = 30f;
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
@@ -78,7 +80,8 @@ public class TestView1 extends View implements ScaleGestureDetector.OnScaleGestu
         width = getMeasuredWidth();
         height = getMeasuredHeight();
         list = new ArrayList<bora>();
-        for (int i = 1; i < 6; i++) {
+        k = k * viewLastScal;
+        for (int i = 1; i < 5; i++) {
             list.add(new bora(i, new Float[]{i * k, i * k, width * viewLastScal - i * k, height * viewLastScal - i * k}));
         }
         viewWidth = width * viewLastScal;
@@ -101,20 +104,71 @@ public class TestView1 extends View implements ScaleGestureDetector.OnScaleGestu
     //===========================================================================================
     @Override
     public boolean onScale(ScaleGestureDetector detector) {
+        float left = getLeft();
+        float top = getTop();
         float scaleFactor = detector.getScaleFactor();
         Log.e(TAG, "scaleFactor：" + scaleFactor);
         viewLastScal = viewLastScal * scaleFactor;
-        Log.e(TAG, "lastScalSize：" + viewLastScal);
-        if (viewLastScal > SCALE_MAX || viewLastScal < SCALE_MIX) {
-            //超限，不做操作
-        } else {
-            for (int i = 0; i < list.size(); i++) {
-                list.get(i).value = new Float[]{i * k, i * k, width * viewLastScal - i * k, height * viewLastScal - i * k};
-            }
-            viewWidth = width * viewLastScal;
-            viewHeight = height * viewLastScal;
-            invalidate();
+        Log.e(TAG, "viewLastScal：" + viewLastScal);
+        if (viewLastScal > SCALE_MAX) {//超限，太大了
+            viewLastScal = SCALE_MAX;
+        } else if (viewLastScal < SCALE_MIX) {//太小了
+            viewLastScal = SCALE_MIX;
         }
+        k = k * scaleFactor;
+        if (k < minK) {
+            k = minK;
+        }
+        for (int i = 0; i < list.size(); i++) {
+            list.get(i).value = new Float[]{(i + 1) * k, (i + 1) * k, width * viewLastScal - (i + 1) * k, height * viewLastScal - (i + 1) * k};
+        }
+        viewWidth = width * viewLastScal;
+        viewHeight = height * viewLastScal;
+
+        //在放大的过程中，跟随手指的中心位置，同步计算移动的方向和距离
+        //左端距中心位置的x值的放缩量，即是水平方向需要挪动的量，判断边界即可
+        Log.e(TAG, "getLeft：" + getLeft());
+
+        float dx = pivotX*(scaleFactor-1);//dx>0即放大，需要向左移动dx来保证中心点不变，dx<0即缩小，需要向右移动dx来保证中心点不变
+        float dy = pivotY*(scaleFactor-1);//dy>0即放大，需要向上移动dy来保证中心点不变，dy<0即缩小，需要向下移动dy来保证中心点不变
+        int l, r, t, b;
+        l = (int) (getLeft() - dx);
+        r = (int) (l + viewWidth);
+        t = (int) (getTop() - dy);
+        b = (int) (t + viewHeight);
+        Log.e(TAG, "l-：" + l + ";t-:" + t + ";r-:" + r + ";b-:" + b);
+        // 如果你的需求是可以划出边界 此时你要计算可以划出边界的偏移量
+        // 最大不能超过自身宽度或者是高度
+        if (dx > 0) {//往左滑动
+            if (r < width) {
+                r = width;
+                l = (int) (width - viewWidth);
+            }
+        } else {
+            if (l > 0) {
+                l = 0;
+                r = (int) viewWidth;
+            }
+        }
+        if (dy > 0) {
+            if (b < height) {
+                b = height;
+                t = (int) (height - viewHeight);
+            }
+        } else {
+            if (t > 0) {
+                t = 0;
+                b = (int) viewHeight;
+            }
+        }
+        Log.e(TAG, "放缩："+"l：" + l + ";t:" + t + ";r:" + r + ";b:" + b);
+        this.layout(l, t, r, b); // 重置view在layout 中位置
+
+        invalidate();
+
+           /* this.setPivotX(pivotX);
+            this.setPivotY(pivotY);*/
+
         return true;
 
     }
@@ -134,7 +188,8 @@ public class TestView1 extends View implements ScaleGestureDetector.OnScaleGestu
     private boolean isDrag = false;
     private float downX; //点击时的x坐标
     private float downY;  // 点击时的y坐标
-    private long currentMS;
+    private long currentMS, currentMS1, currentMS2;
+    private float pivotX, pivotY;
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
@@ -155,13 +210,17 @@ public class TestView1 extends View implements ScaleGestureDetector.OnScaleGestu
                     currentMS = System.currentTimeMillis();//long currentMS     获取系统时间
                     break;
                 case MotionEvent.ACTION_MOVE://拖动
+                    currentMS2 = System.currentTimeMillis();
+                    if (currentMS2 - currentMS1 < 500) {
+                        return true;//解决放缩两指未同时离开屏幕的抖动
+                    }
                     Log.e(TAG, "ACTION_MOVE");
                     dx = event.getRawX() - downX;
                     dy = event.getRawY() - downY;
                     Log.e(TAG, "dx：" + dx + ";dy:" + dy);
                     int l, r, t, b; // 上下左右四点移动后的偏移量
-                    //计算偏移量 设置偏移量 = 3 时 为判断点击事件和滑动事件的峰值
-                    if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
+                    //计算偏移量 设置偏移量 = 20 时 为判断点击事件和滑动事件的峰值
+                    if (Math.abs(dx) > 20 || Math.abs(dy) > 20) {
                         // 偏移量的绝对值大于 3 为 滑动时间 并根据偏移量计算四点移动后的位置
                         l = (int) (getLeft() + dx);
                         r = (int) (l + viewWidth);
@@ -229,11 +288,9 @@ public class TestView1 extends View implements ScaleGestureDetector.OnScaleGestu
             y = y / pointerCount;//中心点
             Log.e(TAG, "中心点：x：" + x + ";y:" + y);
             //根据中心点移动view
-
-
-
-
-
+            pivotX = x;
+            pivotY = y;
+            currentMS1 = System.currentTimeMillis();
         }
         return true;
     }
