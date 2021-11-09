@@ -3,17 +3,16 @@ package com.hhkj.vgsbyhhkjnew;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.RectF;
-import android.graphics.Typeface;
 import android.text.TextUtils;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.View;
-import android.view.ViewTreeObserver;
+import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 
@@ -39,8 +38,9 @@ import java.util.Collections;
  * @UpdateRemark:
  * @Version: 1.0
  */
-public class CoreView extends View implements ScaleGestureDetector.OnScaleGestureListener,
-        View.OnTouchListener, ViewTreeObserver.OnGlobalLayoutListener {
+public class CoreView extends View implements ScaleGestureDetector.OnScaleGestureListener {
+    private Context context;
+    private ScaleGestureDetector mScaleGestureDetector = null;
 
     public CoreView(Context context) {
         this(context, null);
@@ -48,8 +48,9 @@ public class CoreView extends View implements ScaleGestureDetector.OnScaleGestur
 
     public CoreView(Context context, @Nullable AttributeSet attrs) {
         this(context, attrs, 0);
+        this.context = context;
         init();//准备工作
-        this.setOnTouchListener(this);
+        mScaleGestureDetector = new ScaleGestureDetector(context, this);
     }
 
     public CoreView(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
@@ -160,19 +161,27 @@ public class CoreView extends View implements ScaleGestureDetector.OnScaleGestur
     }
 
     @Override
+    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+        doScaleValue();
+    }
+
+    @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        doScaleValue();
         drawVgsView(canvas, shapes);
     }
 
     float scalpercent = 0.8f;
     float textpercent = 1.3f;
     float initScale;
+    private int width; //  测量宽度 屏幕的宽度
+    private int height; // 测量高度 屏幕的高度
+
     private void doScaleValue() {
         System.out.println("===doScaleValue");
-        int width = getWidth();
-        int height = getHeight();
+        width = getMeasuredWidth();
+        height = getMeasuredHeight();
         System.out.println("===width:" + width + ";height:" + height);
         float scalX = width / maxx;
         float scalY = height / maxy;
@@ -182,6 +191,8 @@ public class CoreView extends View implements ScaleGestureDetector.OnScaleGestur
         } else {
             scale(0, initScale * scalpercent, 0, 0, shapes);
         }
+        viewWidth = width;//首次初始化，view的宽高设置为屏幕的宽高
+        viewHeight = height;
     }
 
     //递归计算所有图元的坐标值 以及旋转角度
@@ -487,11 +498,14 @@ public class CoreView extends View implements ScaleGestureDetector.OnScaleGestur
                 getResources().getDisplayMetrics());
     }
 
+    private static final String TAG = TestView1.class.getSimpleName();
     //----------------------------------------------------------------以下为图像放缩
 
 
     @Override
     public boolean onScale(ScaleGestureDetector scaleGestureDetector) {
+
+        .
         return false;
     }
 
@@ -502,16 +516,134 @@ public class CoreView extends View implements ScaleGestureDetector.OnScaleGestur
 
     @Override
     public void onScaleEnd(ScaleGestureDetector scaleGestureDetector) {
-
     }
 
+
+    //是否拖动标识
+    private boolean isDrag = false;
+    private float downX; //点击时的x坐标
+    private float downY;  // 点击时的y坐标
+    private long currentMS, currentMS1, currentMS2;
+    private float pivotX, pivotY;
+    private float viewWidth; //  View放缩后的宽度
+    private float viewHeight; // View放缩后的高度
+
     @Override
-    public boolean onTouch(View view, MotionEvent motionEvent) {
-        return false;
+    public boolean onTouchEvent(MotionEvent event) {
+        Log.e(TAG, "onTouch");
+        Log.e(TAG, "lf：" + getLeft() + ";tp:" + getTop() + "rg:" + getRight() + "bt:" + getBottom());
+        // 拿到触摸点的个数
+        final int pointerCount = event.getPointerCount();
+        float x = 0, y = 0;
+        float dx = 0;
+        float dy = 0;
+        if (pointerCount == 1) {
+            switch (event.getAction()) {
+                case MotionEvent.ACTION_DOWN://单击
+                    Log.e(TAG, "ACTION_DOWN==");
+                    isDrag = false;
+                    downX = event.getRawX(); // 点击触屏时的x坐标 用于离开屏幕时的x坐标作计算
+                    downY = event.getRawY(); // 点击触屏时的y坐标 用于离开屏幕时的y坐标作计算
+                    currentMS = System.currentTimeMillis();//long currentMS     获取系统时间
+                    break;
+                case MotionEvent.ACTION_MOVE://拖动
+                    currentMS2 = System.currentTimeMillis();
+                    if (currentMS2 - currentMS1 < 500) {
+                        return true;//解决放缩两指未同时离开屏幕的抖动
+                    }
+                    Log.e(TAG, "ACTION_MOVE");
+                    dx = event.getRawX() - downX;
+                    dy = event.getRawY() - downY;
+                    Log.e(TAG, "dx：" + dx + ";dy:" + dy);
+                    int l, r, t, b; // 上下左右四点移动后的偏移量
+                    //计算偏移量 设置偏移量 = 20 时 为判断点击事件和滑动事件的峰值
+                    if (Math.abs(dx) > 20 || Math.abs(dy) > 20) {
+                        // 偏移量的绝对值大于 3 为 滑动时间 并根据偏移量计算四点移动后的位置
+                        l = (int) (getLeft() + dx);
+                        r = (int) (l + viewWidth);
+                        t = (int) (getTop() + dy);
+                        b = (int) (t + viewHeight);
+                        Log.e(TAG, "l-：" + l + ";t-:" + t + ";r-:" + r + ";b-:" + b);
+                        // 如果你的需求是可以划出边界 此时你要计算可以划出边界的偏移量
+                        // 最大不能超过自身宽度或者是高度
+                        if (dx < 0) {//往左滑动
+                            if (r < width) {
+                                r = width;
+                                l = (int) (width - viewWidth);
+                            }
+                        } else {
+                            if (l > 0) {
+                                l = 0;
+                                r = (int) viewWidth;
+                            }
+                        }
+                        if (dy < 0) {
+                            if (b < height) {
+                                b = height;
+                                t = (int) (height - viewHeight);
+                            }
+                        } else {
+                            if (t > 0) {
+                                t = 0;
+                                b = (int) viewHeight;
+                            }
+                        }
+                        Log.e(TAG, "l：" + l + ";t:" + t + ";r:" + r + ";b:" + b);
+                        downX = event.getRawX();
+                        downY = event.getRawY();
+                        this.layout(l, t, r, b); // 重置view在layout 中位置
+                        Log.e(TAG, "滑动事件");
+                        isDrag = true;  // 重置 拖动为 true
+                    } else {
+                        isDrag = false; //为点击事件
+                    }
+                    // invalidate();
+                    break;
+
+                case MotionEvent.ACTION_UP:
+                    long moveTime = System.currentTimeMillis() - currentMS;//移动时间
+                    //判断是否继续传递信号
+                    if (moveTime < 200 && (Math.abs(dx) < 20 || Math.abs(dy) < 20)) {
+                        Log.e(TAG, "单击事件：x:" + event.getX() + ";Y:" + event.getY());
+                        isDrag = false; //为点击事件
+                        //遍历点击的图元，找出id
+
+                        int id = getModelId(event.getX(), event.getY());
+                        Log.e(TAG, "单击id:" + id);
+                        if (id != -1) {
+                            Toast.makeText(context, "您选中了" + id, Toast.LENGTH_LONG).show();
+                        }
+                        return true;
+                    }
+                    break;
+                case MotionEvent.ACTION_CANCEL:
+                    Log.e(TAG, "ACTION_UP");
+                    break;
+            }
+        } else if (pointerCount > 1) {//放缩
+            mScaleGestureDetector.onTouchEvent(event);
+            // 得到多个触摸点的x与y均值
+            for (int i = 0; i < pointerCount; i++) {
+                x += event.getX(i);
+                y += event.getY(i);
+            }
+            x = x / pointerCount;
+            y = y / pointerCount;//中心点
+            Log.e(TAG, "中心点：x：" + x + ";y:" + y);
+            //根据中心点移动view
+            pivotX = x;
+            pivotY = y;
+            currentMS1 = System.currentTimeMillis();
+        }
+        return true;
     }
 
-    @Override
-    public void onGlobalLayout() {
+    /**
+     * 获取选中的模型Id
+     */
+    private int getModelId(float x, float y) {
 
+
+        return -1;
     }
 }

@@ -28,7 +28,7 @@ import java.util.ArrayList;
  * @Version: 1.0
  */
 public class TestView1 extends View implements ScaleGestureDetector.OnScaleGestureListener {
-private Context context;
+    private Context context;
     float viewLastScal = 1f;
     float SCALE_MAX = viewLastScal * 25;//最大放大倍数
     float SCALE_MIX = 1f;//最大放大倍数
@@ -40,7 +40,7 @@ private Context context;
 
     public TestView1(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
-        this.context=context;
+        this.context = context;
         init();//准备工作
         mScaleGestureDetector = new ScaleGestureDetector(context, this);
     }
@@ -58,15 +58,15 @@ private Context context;
     }
 
     ArrayList<bora> list;
-    private float viewWidth; //  测量宽度 FreeView的宽度
-    private float viewHeight; // 测量高度 FreeView的高度
+    private float viewWidth; //  View放缩后的宽度
+    private float viewHeight; // View放缩后的高度
 
     public void initData() {
 
     }
 
-    private int width; //  测量宽度 FreeView的宽度
-    private int height; // 测量高度 FreeView的高度
+    private int width; //  屏幕的宽度
+    private int height; // 屏幕的高度
     float k = 30f;
     float minK = 30f;
     float areaPersent = 10f;
@@ -132,7 +132,7 @@ private Context context;
             float y1 = (i + 1) * k;
             float x2 = width * viewLastScal - (i + 1) * k;
             float y2 = height * viewLastScal - (i + 1) * k;
-            list.get(i).value = new Float[]{x1,y1 , x2,y2 };
+            list.get(i).value = new Float[]{x1, y1, x2, y2};
             list.get(i).area.clear();
             ArrayList<Float[]> area = new ArrayList<Float[]>();
             area.add(new Float[]{x1 - areaPersent, y1 - areaPersent, x1 + areaPersent, y2 + areaPersent});//左
@@ -293,7 +293,7 @@ private Context context;
                         int id = getModelId(event.getX(), event.getY());
                         Log.e(TAG, "单击id:" + id);
                         if (id != -1) {
-                            Toast.makeText(context,"您选中了"+id,Toast.LENGTH_LONG).show();
+                            Toast.makeText(context, "您选中了" + id, Toast.LENGTH_LONG).show();
                         }
                         return true;
                     }

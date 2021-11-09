@@ -34,7 +34,7 @@ public class ViewActivity extends Activity {
         coreView.setData(shapes);
         coreView.initData();
         coreView.invalidate();
-        GestureViewManager bind = GestureViewManager.bind(this, groupView, coreView);
-        bind.setFullGroup(true);
+       /* GestureViewManager bind = GestureViewManager.bind(this, groupView, coreView);
+        bind.setFullGroup(true);*/
     }
 }
