@@ -3,18 +3,13 @@ package com.hhkj.vgsbyhhkjnew;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.Matrix;
 import android.graphics.Paint;
-import android.graphics.RectF;
-import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.util.Log;
-import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.View;
-import android.view.ViewTreeObserver;
-import android.view.animation.BounceInterpolator;
+import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 
@@ -33,7 +28,7 @@ import java.util.ArrayList;
  * @Version: 1.0
  */
 public class TestView1 extends View implements ScaleGestureDetector.OnScaleGestureListener {
-
+private Context context;
     float viewLastScal = 1f;
     float SCALE_MAX = viewLastScal * 25;//最大放大倍数
     float SCALE_MIX = 1f;//最大放大倍数
@@ -45,6 +40,7 @@ public class TestView1 extends View implements ScaleGestureDetector.OnScaleGestu
 
     public TestView1(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
+        this.context=context;
         init();//准备工作
         mScaleGestureDetector = new ScaleGestureDetector(context, this);
     }
@@ -73,6 +69,7 @@ public class TestView1 extends View implements ScaleGestureDetector.OnScaleGestu
     private int height; // 测量高度 FreeView的高度
     float k = 30f;
     float minK = 30f;
+    float areaPersent = 10f;
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
@@ -82,7 +79,17 @@ public class TestView1 extends View implements ScaleGestureDetector.OnScaleGestu
         list = new ArrayList<bora>();
         k = k * viewLastScal;
         for (int i = 1; i < 5; i++) {
-            list.add(new bora(i, new Float[]{i * k, i * k, width * viewLastScal - i * k, height * viewLastScal - i * k}));
+            //计算矩形的点击区域
+            float x1 = i * k;
+            float y1 = i * k;
+            float x2 = width * viewLastScal - i * k;
+            float y2 = height * viewLastScal - i * k;
+            ArrayList<Float[]> area = new ArrayList<Float[]>();
+            area.add(new Float[]{x1 - areaPersent, y1 - areaPersent, x1 + areaPersent, y2 + areaPersent});//左
+            area.add(new Float[]{x1 - areaPersent, y1 - areaPersent, x2 + areaPersent, y1 + areaPersent});//上
+            area.add(new Float[]{x2 - areaPersent, y1 - areaPersent, x2 + areaPersent, y2 + areaPersent});//右
+            area.add(new Float[]{x1 - areaPersent, y2 - areaPersent, x2 + areaPersent, y2 + areaPersent});//下
+            list.add(new bora(i, new Float[]{x1, y1, x2, y2}, area));
         }
         viewWidth = width * viewLastScal;
         viewHeight = height * viewLastScal;
@@ -120,7 +127,19 @@ public class TestView1 extends View implements ScaleGestureDetector.OnScaleGestu
             k = minK;
         }
         for (int i = 0; i < list.size(); i++) {
-            list.get(i).value = new Float[]{(i + 1) * k, (i + 1) * k, width * viewLastScal - (i + 1) * k, height * viewLastScal - (i + 1) * k};
+            //计算缩放后的可点击区域：将矩形增加宽度区域为四个矩形（四条边加粗形成四个矩形）
+            float x1 = (i + 1) * k;
+            float y1 = (i + 1) * k;
+            float x2 = width * viewLastScal - (i + 1) * k;
+            float y2 = height * viewLastScal - (i + 1) * k;
+            list.get(i).value = new Float[]{x1,y1 , x2,y2 };
+            list.get(i).area.clear();
+            ArrayList<Float[]> area = new ArrayList<Float[]>();
+            area.add(new Float[]{x1 - areaPersent, y1 - areaPersent, x1 + areaPersent, y2 + areaPersent});//左
+            area.add(new Float[]{x1 - areaPersent, y1 - areaPersent, x2 + areaPersent, y1 + areaPersent});//上
+            area.add(new Float[]{x2 - areaPersent, y1 - areaPersent, x2 + areaPersent, y2 + areaPersent});//右
+            area.add(new Float[]{x1 - areaPersent, y2 - areaPersent, x2 + areaPersent, y2 + areaPersent});//下
+            list.get(i).area.addAll(area);
         }
         viewWidth = width * viewLastScal;
         viewHeight = height * viewLastScal;
@@ -129,8 +148,8 @@ public class TestView1 extends View implements ScaleGestureDetector.OnScaleGestu
         //左端距中心位置的x值的放缩量，即是水平方向需要挪动的量，判断边界即可
         Log.e(TAG, "getLeft：" + getLeft());
 
-        float dx = pivotX*(scaleFactor-1);//dx>0即放大，需要向左移动dx来保证中心点不变，dx<0即缩小，需要向右移动dx来保证中心点不变
-        float dy = pivotY*(scaleFactor-1);//dy>0即放大，需要向上移动dy来保证中心点不变，dy<0即缩小，需要向下移动dy来保证中心点不变
+        float dx = pivotX * (scaleFactor - 1);//dx>0即放大，需要向左移动dx来保证中心点不变，dx<0即缩小，需要向右移动dx来保证中心点不变
+        float dy = pivotY * (scaleFactor - 1);//dy>0即放大，需要向上移动dy来保证中心点不变，dy<0即缩小，需要向下移动dy来保证中心点不变
         int l, r, t, b;
         l = (int) (getLeft() - dx);
         r = (int) (l + viewWidth);
@@ -161,7 +180,7 @@ public class TestView1 extends View implements ScaleGestureDetector.OnScaleGestu
                 b = (int) viewHeight;
             }
         }
-        Log.e(TAG, "放缩："+"l：" + l + ";t:" + t + ";r:" + r + ";b:" + b);
+        Log.e(TAG, "放缩：" + "l：" + l + ";t:" + t + ";r:" + r + ";b:" + b);
         this.layout(l, t, r, b); // 重置view在layout 中位置
 
         invalidate();
@@ -269,7 +288,13 @@ public class TestView1 extends View implements ScaleGestureDetector.OnScaleGestu
                     if (moveTime < 200 && (Math.abs(dx) < 20 || Math.abs(dy) < 20)) {
                         Log.e(TAG, "单击事件：x:" + event.getX() + ";Y:" + event.getY());
                         isDrag = false; //为点击事件
+                        //遍历点击的图元，找出id
 
+                        int id = getModelId(event.getX(), event.getY());
+                        Log.e(TAG, "单击id:" + id);
+                        if (id != -1) {
+                            Toast.makeText(context,"您选中了"+id,Toast.LENGTH_LONG).show();
+                        }
                         return true;
                     }
                     break;
@@ -296,6 +321,26 @@ public class TestView1 extends View implements ScaleGestureDetector.OnScaleGestu
     }
 
 
+    /**
+     * 获取选中的模型Id
+     */
+    private int getModelId(float x, float y) {
+        for (int i = 0; i < list.size(); i++) {
+            for (int j = 0; j < list.get(i).getArea().size(); j++) {
+                //判断是否落在矩形区域
+                float a = list.get(i).getArea().get(j)[0];
+                float b = list.get(i).getArea().get(j)[1];
+                float c = list.get(i).getArea().get(j)[2];
+                float d = list.get(i).getArea().get(j)[3];
+                if (a < x && x < c && b < y && y < d) {
+                    return list.get(i).id;
+                }
+            }
+        }
+        return -1;
+    }
+
+
     // 处理点击事件和滑动时间冲突时使用 返回是否拖动标识
     public boolean isDrag() {
         return isDrag;
@@ -306,12 +351,14 @@ public class TestView1 extends View implements ScaleGestureDetector.OnScaleGestu
     class bora {
         public int id;
 
-        public bora(int id, Float[] value) {
+        public bora(int id, Float[] value, ArrayList<Float[]> area) {
             this.id = id;
             this.value = value;
+            this.area = area;
         }
 
         public Float[] value = new Float[4];
+        public ArrayList<Float[]> area;
 
         public int getId() {
             return id;
@@ -327,6 +374,14 @@ public class TestView1 extends View implements ScaleGestureDetector.OnScaleGestu
 
         public void setValue(Float[] value) {
             this.value = value;
+        }
+
+        public ArrayList<Float[]> getArea() {
+            return area;
+        }
+
+        public void setArea(ArrayList<Float[]> area) {
+            this.area = area;
         }
     }
 }
