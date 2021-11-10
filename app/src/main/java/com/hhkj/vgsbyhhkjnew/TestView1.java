@@ -303,7 +303,7 @@ public class TestView1 extends View implements ScaleGestureDetector.OnScaleGestu
                     break;
             }
         } else if (pointerCount > 1) {//放缩
-            mScaleGestureDetector.onTouchEvent(event);
+
             // 得到多个触摸点的x与y均值
             for (int i = 0; i < pointerCount; i++) {
                 x += event.getX(i);
@@ -316,6 +316,7 @@ public class TestView1 extends View implements ScaleGestureDetector.OnScaleGestu
             pivotX = x;
             pivotY = y;
             currentMS1 = System.currentTimeMillis();
+            mScaleGestureDetector.onTouchEvent(event);
         }
         return true;
     }

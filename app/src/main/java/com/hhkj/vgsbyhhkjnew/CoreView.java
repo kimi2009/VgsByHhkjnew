@@ -41,6 +41,8 @@ import java.util.Collections;
 public class CoreView extends View implements ScaleGestureDetector.OnScaleGestureListener {
     private Context context;
     private ScaleGestureDetector mScaleGestureDetector = null;
+    float SCALE_MAX;//最大放大倍数
+    float SCALE_MIN;//最小缩小倍数
 
     public CoreView(Context context) {
         this(context, null);
@@ -163,7 +165,7 @@ public class CoreView extends View implements ScaleGestureDetector.OnScaleGestur
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-        doScaleValue();
+        initScaleValue();
     }
 
     @Override
@@ -177,8 +179,9 @@ public class CoreView extends View implements ScaleGestureDetector.OnScaleGestur
     float initScale;
     private int width; //  测量宽度 屏幕的宽度
     private int height; // 测量高度 屏幕的高度
+    private float viewLastScal;//View的叠加放缩量
 
-    private void doScaleValue() {
+    private void initScaleValue() {
         System.out.println("===doScaleValue");
         width = getMeasuredWidth();
         height = getMeasuredHeight();
@@ -186,6 +189,10 @@ public class CoreView extends View implements ScaleGestureDetector.OnScaleGestur
         float scalX = width / maxx;
         float scalY = height / maxy;
         initScale = scalX > scalY ? scalY : scalX;
+        SCALE_MIN = initScale;
+        SCALE_MAX = initScale * 50;
+        viewLastScal = initScale;//初始化叠加放缩量
+
         if (initScale <= 1) {//图像过大，则进行缩小，图像过小，仅放大0.8倍
             scale(0, initScale, 0, 0, shapes);
         } else {
@@ -498,20 +505,107 @@ public class CoreView extends View implements ScaleGestureDetector.OnScaleGestur
                 getResources().getDisplayMetrics());
     }
 
-    private static final String TAG = TestView1.class.getSimpleName();
+    private static final String TAG = CoreView.class.getSimpleName();
     //----------------------------------------------------------------以下为图像放缩
 
+    float areaPersent = 10f;
 
     @Override
-    public boolean onScale(ScaleGestureDetector scaleGestureDetector) {
+    public boolean onScale(ScaleGestureDetector detector) {
 
-        .
-        return false;
+        float scaleFactor = detector.getScaleFactor();
+        Log.e(TAG, "scaleFactor：" + scaleFactor);
+        viewLastScal = viewLastScal * scaleFactor;
+        Log.e(TAG, "viewLastScal：" + viewLastScal);
+        if (viewLastScal > SCALE_MAX) {//超限，太大了
+            viewLastScal = SCALE_MAX;
+            Toast.makeText(context, "您已放大到最大级别", Toast.LENGTH_SHORT).show();
+            return true;
+        } else if (viewLastScal < SCALE_MIN) {//太小了
+            viewLastScal = SCALE_MIN;
+        }
+        //计算放缩后的图元数据和图元点击区域
+        doScaleValue();
+        /*for (int i = 0; i < list.size(); i++) {
+            //计算缩放后的可点击区域：将矩形增加宽度区域为四个矩形（四条边加粗形成四个矩形）
+            float x1 = (i + 1) * k;
+            float y1 = (i + 1) * k;
+            float x2 = width * viewLastScal - (i + 1) * k;
+            float y2 = height * viewLastScal - (i + 1) * k;
+
+            list.get(i).value = new Float[]{x1, y1, x2, y2};
+
+            list.get(i).area.clear();
+            ArrayList<Float[]> area = new ArrayList<Float[]>();
+            area.add(new Float[]{x1 - areaPersent, y1 - areaPersent, x1 + areaPersent, y2 + areaPersent});//左
+            area.add(new Float[]{x1 - areaPersent, y1 - areaPersent, x2 + areaPersent, y1 + areaPersent});//上
+            area.add(new Float[]{x2 - areaPersent, y1 - areaPersent, x2 + areaPersent, y2 + areaPersent});//右
+            area.add(new Float[]{x1 - areaPersent, y2 - areaPersent, x2 + areaPersent, y2 + areaPersent});//下
+            list.get(i).area.addAll(area);
+        }*/
+        viewWidth = width * (viewLastScal / initScale);
+        viewHeight = height * (viewLastScal / initScale);
+
+        //在放大的过程中，跟随手指的中心位置，同步计算移动的方向和距离
+        //左端距中心位置的x值的放缩量，即是水平方向需要挪动的量，判断边界即可
+        Log.e(TAG, "getLeft：" + getLeft());
+
+        float dx = pivotX * (scaleFactor - 1);//dx>0即放大，需要向左移动dx来保证中心点不变，dx<0即缩小，需要向右移动dx来保证中心点不变
+        float dy = pivotY * (scaleFactor - 1);//dy>0即放大，需要向上移动dy来保证中心点不变，dy<0即缩小，需要向下移动dy来保证中心点不变
+        int l, r, t, b;
+        l = (int) (getLeft() - dx);
+        r = (int) (l + viewWidth);
+        t = (int) (getTop() - dy);
+        b = (int) (t + viewHeight);
+        Log.e(TAG, "l-：" + l + ";t-:" + t + ";r-:" + r + ";b-:" + b);
+        // 如果你的需求是可以划出边界 此时你要计算可以划出边界的偏移量
+        // 最大不能超过自身宽度或者是高度
+        if (dx > 0) {//往左滑动
+            if (r < width) {
+                r = width;
+                l = (int) (width - viewWidth);
+            }
+        } else {
+            if (l > 0) {
+                l = 0;
+                r = (int) viewWidth;
+            }
+        }
+        if (dy > 0) {
+            if (b < height) {
+                b = height;
+                t = (int) (height - viewHeight);
+            }
+        } else {
+            if (t > 0) {
+                t = 0;
+                b = (int) viewHeight;
+            }
+        }
+        Log.e(TAG, "放缩：" + "l：" + l + ";t:" + t + ";r:" + r + ";b:" + b);
+        this.layout(l, t, r, b); // 重置view在layout 中位置
+
+        invalidate();
+        return true;
+    }
+
+    private void doScaleValue() {
+        //放缩
+        scale(0, viewLastScal, 0, 0, shapes);
+        //计算图元的点击区域
+        doClickZone();
+    }
+
+    /**
+     * 计算图元的点击区域
+     */
+    private void doClickZone() {
+
     }
 
     @Override
     public boolean onScaleBegin(ScaleGestureDetector scaleGestureDetector) {
-        return false;
+        return true;
     }
 
     @Override
@@ -621,7 +715,6 @@ public class CoreView extends View implements ScaleGestureDetector.OnScaleGestur
                     break;
             }
         } else if (pointerCount > 1) {//放缩
-            mScaleGestureDetector.onTouchEvent(event);
             // 得到多个触摸点的x与y均值
             for (int i = 0; i < pointerCount; i++) {
                 x += event.getX(i);
@@ -634,6 +727,7 @@ public class CoreView extends View implements ScaleGestureDetector.OnScaleGestur
             pivotX = x;
             pivotY = y;
             currentMS1 = System.currentTimeMillis();
+            mScaleGestureDetector.onTouchEvent(event);
         }
         return true;
     }
