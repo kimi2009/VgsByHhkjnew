@@ -6,7 +6,7 @@ import java.util.ArrayList;
  * @ProjectName: VgsByHhkjnew
  * @Package: com.hhkj.vgsbyhhkjnew.bean
  * @ClassName: PolygonGeometry
- * @Description:   多边形
+ * @Description: 多边形
  * @Author: D.Han
  * @CreateDate: 2021/9/29 16:52
  * @UpdateUser:
@@ -16,8 +16,10 @@ import java.util.ArrayList;
  */
 public class PolygonGeometry extends BaseStar {
     String points;
-    ArrayList<Point> PolygonGeometryPointsValue=new ArrayList<Point>();
-    ArrayList<Float> polygonGeometryLinepoints=new ArrayList<Float>();
+    ArrayList<Point> PolygonGeometryPointsValue = new ArrayList<Point>();
+    ArrayList<Float> polygonGeometryLinepoints = new ArrayList<Float>();
+    float[] area;
+
     public String getPoints() {
         return points;
     }
@@ -40,5 +42,13 @@ public class PolygonGeometry extends BaseStar {
 
     public void setPolygonGeometryLinepoints(ArrayList<Float> polygonGeometryLinepoints) {
         this.polygonGeometryLinepoints = polygonGeometryLinepoints;
+    }
+
+    public float[] getArea() {
+        return area;
+    }
+
+    public void setArea(float[] area) {
+        this.area = area;
     }
 }

@@ -17,8 +17,9 @@ import java.util.ArrayList;
  */
 public class Line extends BaseStar {
     String points;
-    ArrayList<Point> pointsValue=new ArrayList<Point>();
-    ArrayList<Float> linepoints=new ArrayList<Float>();
+    ArrayList<Point> pointsValue = new ArrayList<Point>();
+    ArrayList<Float> linepoints = new ArrayList<Float>();
+    private ArrayList<float[]> area=new ArrayList<float[]>();
 
     public String getPoints() {
         return points;
@@ -42,5 +43,13 @@ public class Line extends BaseStar {
 
     public void setLinepoints(ArrayList<Float> linepoints) {
         this.linepoints = linepoints;
+    }
+
+    public ArrayList<float[]> getArea() {
+        return area;
+    }
+
+    public void setArea(ArrayList<float[]> area) {
+        this.area = area;
     }
 }

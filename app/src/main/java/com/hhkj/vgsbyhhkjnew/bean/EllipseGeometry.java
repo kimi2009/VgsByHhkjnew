@@ -1,5 +1,7 @@
 package com.hhkj.vgsbyhhkjnew.bean;
 
+import java.util.ArrayList;
+
 /**
  * @ProjectName: VgsByHhkjnew
  * @Package: com.hhkj.vgsbyhhkjnew.bean
@@ -18,6 +20,8 @@ public class EllipseGeometry extends BaseStar {
     String RectLeft;
     String RectTop;
     Float[] value = new Float[4];
+    public Float[] area;
+
     public String getRectHeight() {
         return RectHeight;
     }
@@ -56,5 +60,15 @@ public class EllipseGeometry extends BaseStar {
 
     public void setValue(Float[] value) {
         this.value = value;
+    }
+
+
+
+    public void setArea(Float[] area) {
+        this.area = area;
+    }
+
+    public Float[] getArea() {
+        return area;
     }
 }

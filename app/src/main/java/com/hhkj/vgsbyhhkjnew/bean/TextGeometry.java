@@ -23,6 +23,8 @@ public class TextGeometry extends BaseStar {
     String RectTop;
     String TextAlign;//1 居中  2右对齐
     Float[] value = new Float[4];
+    Float[] area = new Float[4];
+
     public String getText() {
         return text;
     }
@@ -101,5 +103,13 @@ public class TextGeometry extends BaseStar {
 
     public void setTextAlign(String textAlign) {
         TextAlign = textAlign;
+    }
+
+    public Float[] getArea() {
+        return area;
+    }
+
+    public void setArea(Float[] area) {
+        this.area = area;
     }
 }

@@ -1,5 +1,7 @@
 package com.hhkj.vgsbyhhkjnew.bean;
 
+import java.util.ArrayList;
+
 /**
  * @ProjectName: VgsByHhkjnew
  * @Package: com.hhkj.vgsbyhhkjnew.bean
@@ -18,6 +20,7 @@ public class RectGeometry extends BaseStar {
     String RectLeft;
     String RectTop;
     Float[] value = new Float[4];
+    public ArrayList<Float[]> area;
 
     public String getRectHeight() {
         return RectHeight;
@@ -57,5 +60,13 @@ public class RectGeometry extends BaseStar {
 
     public void setValue(Float[] value) {
         this.value = value;
+    }
+
+    public ArrayList<Float[]> getArea() {
+        return area;
+    }
+
+    public void setArea(ArrayList<Float[]> area) {
+        this.area = area;
     }
 }
