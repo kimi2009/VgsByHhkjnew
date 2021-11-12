@@ -20,7 +20,7 @@ public class EllipseGeometry extends BaseStar {
     String RectLeft;
     String RectTop;
     Float[] value = new Float[4];
-    public Float[] area;
+    public Float[] area=new Float[4];
 
     public String getRectHeight() {
         return RectHeight;

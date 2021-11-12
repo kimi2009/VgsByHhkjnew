@@ -21,6 +21,7 @@ public class Shape implements Serializable {
     public String ParentElementId;
     public BaseStar star;
     public ArrayList<Shape> shapes = new ArrayList<Shape>();
+    Float[] area = new Float[4];
 
     public String getId() {
         return id;
@@ -141,5 +142,13 @@ public class Shape implements Serializable {
 
     public void setY(Float y) {
         this.y = y;
+    }
+
+    public Float[] getArea() {
+        return area;
+    }
+
+    public void setArea(Float[] area) {
+        this.area = area;
     }
 }

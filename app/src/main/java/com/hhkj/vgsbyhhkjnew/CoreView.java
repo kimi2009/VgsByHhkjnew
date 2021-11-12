@@ -198,6 +198,8 @@ public class CoreView extends View implements ScaleGestureDetector.OnScaleGestur
         } else {
             scale(0, initScale * scalpercent, 0, 0, shapes);
         }
+        //初始化点击区域
+        doClickZone(shapes);
         viewWidth = width;//首次初始化，view的宽高设置为屏幕的宽高
         viewHeight = height;
     }
@@ -425,6 +427,9 @@ public class CoreView extends View implements ScaleGestureDetector.OnScaleGestur
                     if (TextUtils.isEmpty(textGeometry.getRectWidth()) || TextUtils.isEmpty(textGeometry.getRectHeight())) {
                         continue;
                     }
+                    if (Float.parseFloat(textGeometry.getRectWidth()) == 0f && Float.parseFloat(textGeometry.getRectHeight()) == 0f) {
+                        continue;
+                    }
                     Point p1textGeometry = playRectCenterPoint(textGeometry.getValue());
                     canvas.rotate(shape.angle, p1textGeometry.getX(), p1textGeometry.getY());
                     magicPaint.setTextSize(textGeometry.getScalTextSize());
@@ -630,7 +635,19 @@ public class CoreView extends View implements ScaleGestureDetector.OnScaleGestur
         for (Shape shape : shapeLists) {
             switch (shape.getType()) {//0.组合
                 case 0:
-                    scale(baseAngle + Float.parseFloat(shape.RotateAngle), scal, baseX + shape.x, baseY + shape.y, shape.shapes);
+                    //计算组合的边界，点击时将组合看做一个整体
+                    //scale(baseAngle + Float.parseFloat(shape.RotateAngle), scal, baseX + shape.x, baseY + shape.y, shape.shapes);
+                    ArrayList xList = new ArrayList<Float>();
+                    ArrayList yList = new ArrayList<Float>();
+                    initBoundary(0, 0, shape.shapes, xList, yList);
+                    float shapex1 = (float) Collections.min(xList);
+                    float shapey1 = (float) Collections.min(yList);
+                    float shapex2 = (float) Collections.max(xList);
+                    float shapey2 = (float) Collections.max(yList);
+                    shape.area[0] = shapex1;
+                    shape.area[1] = shapey1;
+                    shape.area[2] = shapex2;
+                    shape.area[3] = shapey2;
                     break;
                 case 1://1.线段
                     Line line = (Line) shape.getStar();
@@ -655,8 +672,8 @@ public class CoreView extends View implements ScaleGestureDetector.OnScaleGestur
                         continue;
                     }
                     polygonGeometry.setArea(playpolygonRect(polygonGeometry.getPolygonGeometryPointsValue()));
-                    ;
 
+                    break;
                 case 3://3.矩形
                     RectGeometry rectGeometry = (RectGeometry) shape.getStar();
                     if (TextUtils.isEmpty(((RectGeometry) shape.getStar()).getRectWidth()) || TextUtils.isEmpty(((RectGeometry) shape.getStar()).getRectHeight())) {
@@ -795,9 +812,9 @@ public class CoreView extends View implements ScaleGestureDetector.OnScaleGestur
                         isDrag = false; //为点击事件
                         //遍历点击的图元，找出id
 
-                        int id = getModelId(event.getX(), event.getY());
+                        String id = getModelId(event.getX(), event.getY());
                         Log.e(TAG, "单击id:" + id);
-                        if (id != -1) {
+                        if (!TextUtils.isEmpty(id)) {
                             Toast.makeText(context, "您选中了" + id, Toast.LENGTH_LONG).show();
                         }
                         return true;
@@ -828,9 +845,81 @@ public class CoreView extends View implements ScaleGestureDetector.OnScaleGestur
     /**
      * 获取选中的模型Id
      */
-    private int getModelId(float x, float y) {
+    private String getModelId(float x, float y) {
+        for (Shape shape : shapes) {
+            switch (shape.getType()) {//0.组合
+                case 0:
+                    //计算是否落袋
+                    if ((shape.area[0] < x && x < shape.area[2]) && (shape.area[1] < y && y < shape.area[3])) {
+                        return shape.id;
+                    }
+                    break;
+                case 1://1.线段
+                    Line line = (Line) shape.getStar();
+                    ArrayList<Float> linepoints = line.getLinepoints();
+                    if (linepoints.size() == 0) {
+                        continue;
+                    }
+                    ArrayList<float[]> area = line.getArea();
+                    for (int j = 0; j < area.size(); j++) {
+                        //判断是否落在矩形区域
+                        float a = area.get(j)[0];
+                        float b = area.get(j)[1];
+                        float c = area.get(j)[2];
+                        float d = area.get(j)[3];
+                        if (a < x && x < c && b < y && y < d) {
+                            return shape.id;
+                        }
+                    }
+                    break;
+                case 2://2.多边形
+                    PolygonGeometry polygonGeometry = (PolygonGeometry) shape.getStar();
+                    if (polygonGeometry.getPolygonGeometryLinepoints().size() == 0) {
+                        continue;
+                    }
+                    float[] area2 = polygonGeometry.getArea();
+                    if ((area2[0] < x && x < area2[2]) && (area2[1] < y && y < area2[3])) {
+                        return shape.id;
+                    }
+                    break;
+                case 3://3.矩形
+                    RectGeometry rectGeometry = (RectGeometry) shape.getStar();
+                    if (TextUtils.isEmpty(((RectGeometry) shape.getStar()).getRectWidth()) || TextUtils.isEmpty(((RectGeometry) shape.getStar()).getRectHeight())) {
+                        continue;
+                    }
+                    ArrayList<Float[]> area3 = rectGeometry.getArea();
+                    for (int j = 0; j < area3.size(); j++) {
+                        //判断是否落在矩形区域
+                        float a = area3.get(j)[0];
+                        float b = area3.get(j)[1];
+                        float c = area3.get(j)[2];
+                        float d = area3.get(j)[3];
+                        if (a < x && x < c && b < y && y < d) {
+                            return shape.id;
+                        }
+                    }
+                    break;
+                case 4://4.椭圆
+                    EllipseGeometry ellipseGeometry = (EllipseGeometry) shape.getStar();
+                    if (TextUtils.isEmpty(((EllipseGeometry) shape.getStar()).getRectWidth()) || TextUtils.isEmpty(((EllipseGeometry) shape.getStar()).getRectHeight())) {
+                        continue;
+                    }
+                    if ((ellipseGeometry.getArea()[0] < x && x < ellipseGeometry.getArea()[2]) && (ellipseGeometry.getArea()[1] < y && y < ellipseGeometry.getArea()[3])) {
+                        return shape.id;
+                    }
+                    break;
+                case 5://5.文字
+                    TextGeometry textGeometry = (TextGeometry) shape.getStar();
+                    if (TextUtils.isEmpty(((TextGeometry) shape.getStar()).getRectWidth()) || TextUtils.isEmpty(((TextGeometry) shape.getStar()).getRectHeight())) {
+                        continue;
+                    }
+                    if ((textGeometry.getArea()[0] < x && x < textGeometry.getArea()[2]) && (textGeometry.getArea()[1] < y && y < textGeometry.getArea()[3])) {
+                        return shape.id;
+                    }
+                    break;
+            }
+        }
 
-
-        return -1;
+        return null;
     }
 }
