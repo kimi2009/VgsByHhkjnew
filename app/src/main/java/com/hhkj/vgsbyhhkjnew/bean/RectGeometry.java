@@ -20,7 +20,7 @@ public class RectGeometry extends BaseStar {
     String RectLeft;
     String RectTop;
     Float[] value = new Float[4];
-    public ArrayList<Float[]> area=new ArrayList<Float[]>();
+    public ArrayList<Float[]> area;
 
     public String getRectHeight() {
         return RectHeight;

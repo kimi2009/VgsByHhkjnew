@@ -168,10 +168,19 @@ public class CoreView extends View implements ScaleGestureDetector.OnScaleGestur
         initScaleValue();
     }
 
+    private boolean isTest = false;
+
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
         drawVgsView(canvas, shapes);
+
+        if (isTest) {
+            for (int i = 0; i < testClickZone.size(); i++) {
+                canvas.drawRect(new RectF(testClickZone.get(i)[0], testClickZone.get(i)[1], testClickZone.get(i)[2], testClickZone.get(i)[3]), magicPaint);
+            }
+        }
+
     }
 
     float scalpercent = 0.8f;
@@ -556,23 +565,7 @@ public class CoreView extends View implements ScaleGestureDetector.OnScaleGestur
         }
         //计算放缩后的图元数据和图元点击区域
         doScaleValue();
-        /*for (int i = 0; i < list.size(); i++) {
-            //计算缩放后的可点击区域：将矩形增加宽度区域为四个矩形（四条边加粗形成四个矩形）
-            float x1 = (i + 1) * k;
-            float y1 = (i + 1) * k;
-            float x2 = width * viewLastScal - (i + 1) * k;
-            float y2 = height * viewLastScal - (i + 1) * k;
 
-            list.get(i).value = new Float[]{x1, y1, x2, y2};
-
-            list.get(i).area.clear();
-            ArrayList<Float[]> area = new ArrayList<Float[]>();
-            area.add(new Float[]{x1 - areaPersent, y1 - areaPersent, x1 + areaPersent, y2 + areaPersent});//左
-            area.add(new Float[]{x1 - areaPersent, y1 - areaPersent, x2 + areaPersent, y1 + areaPersent});//上
-            area.add(new Float[]{x2 - areaPersent, y1 - areaPersent, x2 + areaPersent, y2 + areaPersent});//右
-            area.add(new Float[]{x1 - areaPersent, y2 - areaPersent, x2 + areaPersent, y2 + areaPersent});//下
-            list.get(i).area.addAll(area);
-        }*/
         viewWidth = width * (viewLastScal / initScale);
         viewHeight = height * (viewLastScal / initScale);
 
@@ -636,14 +629,14 @@ public class CoreView extends View implements ScaleGestureDetector.OnScaleGestur
             switch (shape.getType()) {//0.组合
                 case 0:
                     //计算组合的边界，点击时将组合看做一个整体
-                    //scale(baseAngle + Float.parseFloat(shape.RotateAngle), scal, baseX + shape.x, baseY + shape.y, shape.shapes);
                     ArrayList xList = new ArrayList<Float>();
                     ArrayList yList = new ArrayList<Float>();
-                    initBoundary(0, 0, shape.shapes, xList, yList);
+                    initClickBoundary(shape.x, shape.y, shape.shapes, xList, yList);
                     float shapex1 = (float) Collections.min(xList);
                     float shapey1 = (float) Collections.min(yList);
                     float shapex2 = (float) Collections.max(xList);
                     float shapey2 = (float) Collections.max(yList);
+                    shape.area = new Float[4];
                     shape.area[0] = shapex1;
                     shape.area[1] = shapey1;
                     shape.area[2] = shapex2;
@@ -655,7 +648,7 @@ public class CoreView extends View implements ScaleGestureDetector.OnScaleGestur
                     if (linepoints.size() == 0) {
                         continue;
                     }
-                    ArrayList<float[]> area = line.getArea();
+                    ArrayList<float[]> area = new ArrayList<float[]>();
                     if (linepoints.size() % 4 == 0) {
                         for (int i = 0; i < linepoints.size() / 4; i++) {
                             float x1 = linepoints.get(i * 4);
@@ -665,6 +658,7 @@ public class CoreView extends View implements ScaleGestureDetector.OnScaleGestur
                             area.add(new float[]{x1 - areaPersent, y1 - areaPersent, x2 + areaPersent, y2 + areaPersent});//矩形区域
                         }
                     }
+                    line.setArea(area);
                     break;
                 case 2://2.多边形
                     PolygonGeometry polygonGeometry = (PolygonGeometry) shape.getStar();
@@ -672,7 +666,6 @@ public class CoreView extends View implements ScaleGestureDetector.OnScaleGestur
                         continue;
                     }
                     polygonGeometry.setArea(playpolygonRect(polygonGeometry.getPolygonGeometryPointsValue()));
-
                     break;
                 case 3://3.矩形
                     RectGeometry rectGeometry = (RectGeometry) shape.getStar();
@@ -683,31 +676,101 @@ public class CoreView extends View implements ScaleGestureDetector.OnScaleGestur
                     float y1 = rectGeometry.getValue()[1];
                     float x2 = rectGeometry.getValue()[2];
                     float y2 = rectGeometry.getValue()[3];
-                    ArrayList<Float[]> area1 = rectGeometry.getArea();
+                    ArrayList<Float[]> area1 = new ArrayList<Float[]>();
                     area1.add(new Float[]{x1 - areaPersent, y1 - areaPersent, x1 + areaPersent, y2 + areaPersent});//左
                     area1.add(new Float[]{x1 - areaPersent, y1 - areaPersent, x2 + areaPersent, y1 + areaPersent});//上
                     area1.add(new Float[]{x2 - areaPersent, y1 - areaPersent, x2 + areaPersent, y2 + areaPersent});//右
                     area1.add(new Float[]{x1 - areaPersent, y2 - areaPersent, x2 + areaPersent, y2 + areaPersent});//下
+                    rectGeometry.setArea(area1);
                     break;
                 case 4://4.椭圆
                     EllipseGeometry ellipseGeometry = (EllipseGeometry) shape.getStar();
                     if (TextUtils.isEmpty(((EllipseGeometry) shape.getStar()).getRectWidth()) || TextUtils.isEmpty(((EllipseGeometry) shape.getStar()).getRectHeight())) {
                         continue;
                     }
+                    ellipseGeometry.setArea(new Float[4]);
                     ellipseGeometry.getArea()[0] = ellipseGeometry.getValue()[0];
                     ellipseGeometry.getArea()[1] = ellipseGeometry.getValue()[1];
                     ellipseGeometry.getArea()[2] = ellipseGeometry.getValue()[2];
                     ellipseGeometry.getArea()[3] = ellipseGeometry.getValue()[3];
+
                     break;
                 case 5://5.文字
                     TextGeometry textGeometry = (TextGeometry) shape.getStar();
                     if (TextUtils.isEmpty(((TextGeometry) shape.getStar()).getRectWidth()) || TextUtils.isEmpty(((TextGeometry) shape.getStar()).getRectHeight())) {
                         continue;
                     }
+                    textGeometry.setArea(new Float[4]);
                     textGeometry.getArea()[0] = textGeometry.getValue()[0];
                     textGeometry.getArea()[1] = textGeometry.getValue()[1];
                     textGeometry.getArea()[2] = textGeometry.getValue()[2];
                     textGeometry.getArea()[3] = textGeometry.getValue()[3];
+                    break;
+            }
+        }
+    }
+
+    private void initClickBoundary(Float baseX, Float baseY, ArrayList<Shape> shapeLists, ArrayList xList, ArrayList yList) {
+        for (Shape shape : shapeLists) {
+            switch (shape.getType()) {//0.组合
+                case 0:
+                    initBoundary(baseX + shape.x, baseY + shape.y, shape.shapes, xList, yList);
+                    break;
+                case 1://1.线段
+                    if (((Line) shape.getStar()).getLinepoints() == null) {
+                        continue;
+                    }
+                    ArrayList<Float> linepoints = ((Line) shape.getStar()).getLinepoints();
+
+                    if (linepoints.size() % 4 == 0) {
+                        for (int i = 0; i < linepoints.size() / 4; i++) {
+                            xList.add(linepoints.get(i * 4));
+                            yList.add(linepoints.get(i * 4 + 1));
+                            xList.add(linepoints.get(i * 4 + 2));
+                            yList.add(linepoints.get(i * 4 + 3));
+                        }
+                    }
+                    break;
+                case 2://2.多边形
+                    PolygonGeometry polygonGeometry = (PolygonGeometry) shape.getStar();
+                    if (polygonGeometry.getPolygonGeometryLinepoints().size() == 0) {
+                        continue;
+                    }
+                    float[] f = playpolygonRect(polygonGeometry.getPolygonGeometryPointsValue());
+                    xList.add(f[0]);
+                    yList.add(f[1]);
+                    xList.add(f[2]);
+                    yList.add(f[3]);
+                    break;
+                case 3: //3.矩形
+                    RectGeometry rectGeometry = (RectGeometry) shape.getStar();
+                    if (TextUtils.isEmpty(((RectGeometry) shape.getStar()).getRectWidth()) || TextUtils.isEmpty(((RectGeometry) shape.getStar()).getRectHeight())) {
+                        continue;
+                    }
+                    xList.add(rectGeometry.getValue()[0]);
+                    yList.add(rectGeometry.getValue()[1]);
+                    xList.add(rectGeometry.getValue()[2]);
+                    yList.add(rectGeometry.getValue()[3]);
+                    break;
+                case 4://4.椭圆
+                    EllipseGeometry ellipseGeometry = (EllipseGeometry) shape.getStar();
+                    if (TextUtils.isEmpty(((EllipseGeometry) shape.getStar()).getRectWidth()) || TextUtils.isEmpty(((EllipseGeometry) shape.getStar()).getRectHeight())) {
+                        continue;
+                    }
+                    xList.add(ellipseGeometry.getValue()[0]);
+                    yList.add(ellipseGeometry.getValue()[1]);
+                    xList.add(ellipseGeometry.getValue()[2]);
+                    yList.add(ellipseGeometry.getValue()[3]);
+                    break;
+                case 5://5.文字
+                    TextGeometry textGeometry = (TextGeometry) shape.getStar();
+                    if (TextUtils.isEmpty(((TextGeometry) shape.getStar()).getRectWidth()) || TextUtils.isEmpty(((TextGeometry) shape.getStar()).getRectHeight())) {
+                        continue;
+                    }
+                    xList.add(textGeometry.getValue()[0]);
+                    yList.add(textGeometry.getValue()[1]);
+                    xList.add(textGeometry.getValue()[2]);
+                    yList.add(textGeometry.getValue()[3]);
                     break;
             }
         }
@@ -812,10 +875,13 @@ public class CoreView extends View implements ScaleGestureDetector.OnScaleGestur
                         isDrag = false; //为点击事件
                         //遍历点击的图元，找出id
 
-                        String id = getModelId(event.getX(), event.getY());
-                        Log.e(TAG, "单击id:" + id);
-                        if (!TextUtils.isEmpty(id)) {
-                            Toast.makeText(context, "您选中了" + id, Toast.LENGTH_LONG).show();
+                        Shape clickShape = getModelId(event.getX(), event.getY());
+                        if (clickShape != null) {
+                            Log.e(TAG, "单击id:" + clickShape.id);
+                            Toast.makeText(context, "选了" + clickShape.getType() + "---" + clickShape.id, Toast.LENGTH_LONG).show();
+                            if (isTest) {
+                                invalidate();
+                            }
                         }
                         return true;
                     }
@@ -842,16 +908,24 @@ public class CoreView extends View implements ScaleGestureDetector.OnScaleGestur
         return true;
     }
 
+    private ArrayList<float[]> testClickZone = new ArrayList<float[]>();
+
     /**
      * 获取选中的模型Id
      */
-    private String getModelId(float x, float y) {
+    private Shape getModelId(float x, float y) {
+        testClickZone.clear();
         for (Shape shape : shapes) {
             switch (shape.getType()) {//0.组合
                 case 0:
                     //计算是否落袋
+                    if (shape.id.equals("{46C73A29-6F6F-4e81-B811-3171D899D6B5}")) {
+                        Log.e(TAG, "组合点击区域：" + shape.area[0] + "," + shape.area[1] + "," + shape.area[2] + "," + shape.area[3]);
+                    }
                     if ((shape.area[0] < x && x < shape.area[2]) && (shape.area[1] < y && y < shape.area[3])) {
-                        return shape.id;
+                        float[] a = new float[]{shape.area[0], shape.area[1], shape.area[2], shape.area[3]};
+                        testClickZone.add(a);
+                        return shape;
                     }
                     break;
                 case 1://1.线段
@@ -867,8 +941,10 @@ public class CoreView extends View implements ScaleGestureDetector.OnScaleGestur
                         float b = area.get(j)[1];
                         float c = area.get(j)[2];
                         float d = area.get(j)[3];
+                        float[] aa = new float[]{a, b, c, d};
+                        testClickZone.add(aa);
                         if (a < x && x < c && b < y && y < d) {
-                            return shape.id;
+                            return shape;
                         }
                     }
                     break;
@@ -879,7 +955,9 @@ public class CoreView extends View implements ScaleGestureDetector.OnScaleGestur
                     }
                     float[] area2 = polygonGeometry.getArea();
                     if ((area2[0] < x && x < area2[2]) && (area2[1] < y && y < area2[3])) {
-                        return shape.id;
+                        float[] a = new float[]{area2[0], area2[1], area2[2], area2[3]};
+                        testClickZone.add(a);
+                        return shape;
                     }
                     break;
                 case 3://3.矩形
@@ -894,8 +972,10 @@ public class CoreView extends View implements ScaleGestureDetector.OnScaleGestur
                         float b = area3.get(j)[1];
                         float c = area3.get(j)[2];
                         float d = area3.get(j)[3];
+                        float[] ab = new float[]{a, b, c, d};
+                        testClickZone.add(ab);
                         if (a < x && x < c && b < y && y < d) {
-                            return shape.id;
+                            return shape;
                         }
                     }
                     break;
@@ -905,7 +985,9 @@ public class CoreView extends View implements ScaleGestureDetector.OnScaleGestur
                         continue;
                     }
                     if ((ellipseGeometry.getArea()[0] < x && x < ellipseGeometry.getArea()[2]) && (ellipseGeometry.getArea()[1] < y && y < ellipseGeometry.getArea()[3])) {
-                        return shape.id;
+                        float[] a = new float[]{ellipseGeometry.getArea()[0], ellipseGeometry.getArea()[1], ellipseGeometry.getArea()[2], ellipseGeometry.getArea()[3]};
+                        testClickZone.add(a);
+                        return shape;
                     }
                     break;
                 case 5://5.文字
@@ -914,7 +996,9 @@ public class CoreView extends View implements ScaleGestureDetector.OnScaleGestur
                         continue;
                     }
                     if ((textGeometry.getArea()[0] < x && x < textGeometry.getArea()[2]) && (textGeometry.getArea()[1] < y && y < textGeometry.getArea()[3])) {
-                        return shape.id;
+                        float[] a = new float[]{textGeometry.getArea()[0], textGeometry.getArea()[1], textGeometry.getArea()[2], textGeometry.getArea()[3]};
+                        testClickZone.add(a);
+                        return shape;
                     }
                     break;
             }

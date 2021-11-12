@@ -19,7 +19,7 @@ public class Line extends BaseStar {
     String points;
     ArrayList<Point> pointsValue = new ArrayList<Point>();
     ArrayList<Float> linepoints = new ArrayList<Float>();
-    private ArrayList<float[]> area=new ArrayList<float[]>();
+    private ArrayList<float[]> area;
 
     public String getPoints() {
         return points;

@@ -21,7 +21,7 @@ public class Shape implements Serializable {
     public String ParentElementId;
     public BaseStar star;
     public ArrayList<Shape> shapes = new ArrayList<Shape>();
-    Float[] area = new Float[4];
+    Float[] area ;
 
     public String getId() {
         return id;
