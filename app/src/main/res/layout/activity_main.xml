@@ -17,7 +17,9 @@
         android:id="@+id/drawbyself"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="图片放缩" />
+        android:text="图片放缩"
+        android:visibility="gone" />
+
     <Button
         android:id="@+id/test"
         android:layout_width="wrap_content"

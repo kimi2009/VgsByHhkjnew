@@ -1,6 +1,7 @@
 package com.hhkj.vgsbyhhkjnew;
 
 import com.hhkj.vgsbyhhkjnew.bean.BaseStar;
+import com.hhkj.vgsbyhhkjnew.bean.Point;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -11,6 +12,8 @@ public class Shape implements Serializable {
     private String TypeId;
     ArrayList<Entity> sons = new ArrayList<Entity>();
     public String RotateAngle;
+    private boolean isInGroup;
+    private Point rotateCenterbygroup;
     public float angle;
     public Float x;
     public Float y;
@@ -21,7 +24,7 @@ public class Shape implements Serializable {
     public String ParentElementId;
     public BaseStar star;
     public ArrayList<Shape> shapes = new ArrayList<Shape>();
-    Float[] area ;
+    Float[] area;
 
     public String getId() {
         return id;
@@ -37,6 +40,22 @@ public class Shape implements Serializable {
 
     public void setRotateAngle(String rotateAngle) {
         RotateAngle = rotateAngle;
+    }
+
+    public boolean isInGroup() {
+        return isInGroup;
+    }
+
+    public void setInGroup(boolean inGroup) {
+        isInGroup = inGroup;
+    }
+
+    public Point getRotateCenterbygroup() {
+        return rotateCenterbygroup;
+    }
+
+    public void setRotateCenterbygroup(Point rotateCenterbygroup) {
+        this.rotateCenterbygroup = rotateCenterbygroup;
     }
 
     public float getAngle() {
