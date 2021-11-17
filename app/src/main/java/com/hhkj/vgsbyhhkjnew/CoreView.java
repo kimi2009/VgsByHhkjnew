@@ -30,12 +30,12 @@ import java.util.Collections;
  * @ProjectName: VgsByHhkjnew
  * @Package: com.hhkj.vgsbyhhkjnew
  * @ClassName: CoreView
- * @Description: 花有重开日，人无再少年
+ * @Description:
  * @Author: D.Han
  * @CreateDate: 2021/7/27 11:40
  * @UpdateUser:
  * @UpdateDate:
- * @UpdateRemark:
+ * @UpdateRemark:花有重开日，人无再少年
  * @Version: 1.0
  */
 public class CoreView extends View implements ScaleGestureDetector.OnScaleGestureListener {
@@ -174,7 +174,7 @@ public class CoreView extends View implements ScaleGestureDetector.OnScaleGestur
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        drawVgsView(canvas, shapes,0,0);
+        drawVgsView(canvas, shapes);
 
         if (isTest) {
             for (int i = 0; i < testClickZone.size(); i++) {
@@ -203,9 +203,9 @@ public class CoreView extends View implements ScaleGestureDetector.OnScaleGestur
         viewLastScal = initScale;//初始化叠加放缩量
 
         if (initScale <= 1) {//图像过大，则进行缩小，图像过小，仅放大0.8倍
-            scale(0, initScale, 0, 0, shapes);
+            scale( initScale, 0, 0, shapes);
         } else {
-            scale(0, initScale * scalpercent, 0, 0, shapes);
+            scale( initScale * scalpercent, 0, 0, shapes);
         }
         //初始化点击区域
         doClickZone(shapes);
@@ -214,15 +214,15 @@ public class CoreView extends View implements ScaleGestureDetector.OnScaleGestur
     }
 
     //递归计算所有图元的坐标值 以及旋转角度
-    private void scale(float baseAngle, float scal, float baseX, float baseY, ArrayList<Shape> shapeLists) {
+    private void scale( float scal, float baseX, float baseY, ArrayList<Shape> shapeLists) {
         for (Shape shape : shapeLists) {
             if (!TextUtils.isEmpty(shape.RotateAngle)) {
-                float angle = baseAngle + Float.parseFloat(shape.RotateAngle);
-                shape.setAngle(angle);
+               // float angle = baseAngle + Float.parseFloat(shape.RotateAngle);
+                shape.setAngle(Float.parseFloat(shape.RotateAngle));
             }
             switch (shape.getType()) {//0.组合
                 case 0:
-                    scale(baseAngle + Float.parseFloat(shape.RotateAngle), scal, baseX + shape.x, baseY + shape.y, shape.shapes);
+                    scale( scal, baseX + shape.x, baseY + shape.y, shape.shapes);
                     break;
                 case 1://1.线段
                     Line line = (Line) shape.getStar();
@@ -349,7 +349,7 @@ public class CoreView extends View implements ScaleGestureDetector.OnScaleGestur
     }
 
     //画图
-    private void drawVgsView(Canvas canvas, ArrayList<Shape> shapeLists,float rX,float rY) {
+    private void drawVgsView(Canvas canvas, ArrayList<Shape> shapeLists) {
         //System.out.println("===drawVgsView");
         if (shapeLists == null || !(shapeLists.size() > 0)) {
             return;
@@ -358,7 +358,8 @@ public class CoreView extends View implements ScaleGestureDetector.OnScaleGestur
             canvas.save();
             switch (shape.getType()) {//0.组合
                 case 0:
-                    drawVgsView(canvas, shape.shapes,shape.getRotateCenterbygroup().getX(),shape.getRotateCenterbygroup().getY());
+                    canvas.rotate(shape.angle, shape.getRotateCenterbygroup().getX(), shape.getRotateCenterbygroup().getY());
+                    drawVgsView(canvas, shape.shapes);
                     break;
                 case 1://1.线段
                     Line line = (Line) shape.getStar();
@@ -370,19 +371,17 @@ public class CoreView extends View implements ScaleGestureDetector.OnScaleGestur
                         floats[i] = line.getLinepoints().get(i);
                     }
                     //旋转
-                    if (shape.isInGroup()) {
-                        canvas.rotate(shape.angle, rX, rY);
-                    } else {
-                        float rotateCenterX = floats[0] + (floats[floats.length - 2] - floats[0]) / 2;
-                        float rotateCenterY = floats[1] + (floats[floats.length - 1] - floats[1]) / 2;
-                        canvas.rotate(shape.angle, rotateCenterX, rotateCenterY);
-                    }
+                    /*float rotateCenterX = floats[0] + (floats[floats.length - 2] - floats[0]) / 2;
+                    float rotateCenterY = floats[1] + (floats[floats.length - 1] - floats[1]) / 2;*/
+
+                    Point p0=playpolygonCenterPoint(line.getPointsValue());
+                    canvas.rotate(shape.angle, p0.getX(), p0.getY());
+
                     if (!TextUtils.isEmpty(line.getColor())) {
                         magicPaint.setColor(Color.parseColor(line.getColor()));
                     }
                     //画
                     canvas.drawLines(floats, magicPaint);
-
                     break;
                 case 2://2.多边形
                     PolygonGeometry polygonGeometry = (PolygonGeometry) shape.getStar();
@@ -393,13 +392,10 @@ public class CoreView extends View implements ScaleGestureDetector.OnScaleGestur
                     for (int i = 0; i < polygonGeometry.getPolygonGeometryLinepoints().size(); i++) {
                         floats1[i] = polygonGeometry.getPolygonGeometryLinepoints().get(i);
                     }
-                    if (shape.isInGroup()) {
-                        canvas.rotate(shape.angle, rX, rY);
-                    } else {
-                        //计算旋转中心：多边形的旋转中心为包围多边形的矩形中心，需要计算矩形的顶点坐标，再计算矩形中心点
-                        Point p = playpolygonCenterPoint(polygonGeometry.getPolygonGeometryPointsValue());
-                        canvas.rotate(shape.angle, p.getX(), p.getY());
-                    }
+                    //计算旋转中心：多边形的旋转中心为包围多边形的矩形中心，需要计算矩形的顶点坐标，再计算矩形中心点
+                    Point p = playpolygonCenterPoint(polygonGeometry.getPolygonGeometryPointsValue());
+                    canvas.rotate(shape.angle, p.getX(), p.getY());
+
                     if (!TextUtils.isEmpty(polygonGeometry.getColor())) {
                         magicPaint.setColor(Color.parseColor(polygonGeometry.getColor()));
                     }
@@ -411,12 +407,9 @@ public class CoreView extends View implements ScaleGestureDetector.OnScaleGestur
                     if (TextUtils.isEmpty(rectGeometry.getRectWidth()) || TextUtils.isEmpty(rectGeometry.getRectHeight())) {
                         continue;
                     }
-                    if (shape.isInGroup()) {
-                        canvas.rotate(shape.angle, rX, rY);
-                    } else {
-                        Point p1 = playRectCenterPoint(rectGeometry.getValue());
-                        canvas.rotate(shape.angle, p1.getX(), p1.getY());
-                    }
+                    Point p1 = playRectCenterPoint(rectGeometry.getValue());
+                    canvas.rotate(shape.angle, p1.getX(), p1.getY());
+
                     if (!TextUtils.isEmpty(rectGeometry.getColor())) {
                         magicPaint.setColor(Color.parseColor(rectGeometry.getColor()));
                     }
@@ -431,12 +424,9 @@ public class CoreView extends View implements ScaleGestureDetector.OnScaleGestur
                     if (TextUtils.isEmpty(ellipseGeometry.getRectWidth()) || TextUtils.isEmpty(ellipseGeometry.getRectHeight())) {
                         continue;
                     }
-                    if (shape.isInGroup()) {
-                        canvas.rotate(shape.angle, rX, rY);
-                    } else {
-                        Point p1ellipseGeometry = playRectCenterPoint(ellipseGeometry.getValue());
-                        canvas.rotate(shape.angle, p1ellipseGeometry.getX(), p1ellipseGeometry.getY());
-                    }
+                    Point p1ellipseGeometry = playRectCenterPoint(ellipseGeometry.getValue());
+                    canvas.rotate(shape.angle, p1ellipseGeometry.getX(), p1ellipseGeometry.getY());
+
                     if (!TextUtils.isEmpty(ellipseGeometry.getColor())) {
                         magicPaint.setColor(Color.parseColor(ellipseGeometry.getColor()));
                     }
@@ -454,12 +444,9 @@ public class CoreView extends View implements ScaleGestureDetector.OnScaleGestur
                     if (Float.parseFloat(textGeometry.getRectWidth()) == 0f && Float.parseFloat(textGeometry.getRectHeight()) == 0f) {
                         continue;
                     }
-                    if (shape.isInGroup()) {
-                        canvas.rotate(shape.angle, rX, rY);
-                    } else {
-                        Point p1textGeometry = playRectCenterPoint(textGeometry.getValue());
-                        canvas.rotate(shape.angle, p1textGeometry.getX(), p1textGeometry.getY());
-                    }
+                    Point p1textGeometry = playRectCenterPoint(textGeometry.getValue());
+                    canvas.rotate(shape.angle, p1textGeometry.getX(), p1textGeometry.getY());
+
                     magicPaint.setTextSize(textGeometry.getScalTextSize());
                     RectF rectF = new RectF(textGeometry.getValue()[0], textGeometry.getValue()[1], textGeometry.getValue()[2], textGeometry.getValue()[3]);
                     //canvas.drawRect(rectF, magicPaint);
@@ -472,18 +459,11 @@ public class CoreView extends View implements ScaleGestureDetector.OnScaleGestur
                     }
                     if (textGeometry.getTextAlign().equals("1")) {
                         magicPaint.setTextAlign(Paint.Align.CENTER);
-                        if (shape.isInGroup()) {
-                            canvas.drawText(textGeometry.getText(), shape.getRotateCenterbygroup().getX(), baseline, magicPaint);
-                        } else {
-                            Point p1textGeometry = playRectCenterPoint(textGeometry.getValue());
-                            canvas.drawText(textGeometry.getText(), p1textGeometry.getX(), baseline, magicPaint);
-                        }
-
+                        canvas.drawText(textGeometry.getText(), p1textGeometry.getX(), baseline, magicPaint);
                     } else if (textGeometry.getTextAlign().equals("2")) {
                         magicPaint.setTextAlign(Paint.Align.RIGHT);
                         canvas.drawText(textGeometry.getText(), textGeometry.getValue()[2], baseline, magicPaint);
                     }
-
                     break;
             }
             //重置画笔颜色
@@ -639,7 +619,7 @@ public class CoreView extends View implements ScaleGestureDetector.OnScaleGestur
 
     private void doScaleValue() {
         //放缩
-        scale(0, viewLastScal, 0, 0, shapes);
+        scale( viewLastScal, 0, 0, shapes);
         //计算图元的点击区域
         doClickZone(shapes);
     }
