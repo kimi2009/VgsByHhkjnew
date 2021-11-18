@@ -14,7 +14,6 @@ package com.hhkj.vgsbyhhkjnew.bean;
  */
 public class TextGeometry extends BaseStar {
     String text;
-    String color;
     float textSize;
     float scalTextSize;
     String RectHeight;
@@ -41,13 +40,6 @@ public class TextGeometry extends BaseStar {
         this.scalTextSize = scalTextSize;
     }
 
-    public String getColor() {
-        return color;
-    }
-
-    public void setColor(String color) {
-        this.color = color;
-    }
 
     public float getTextSize() {
         return textSize;

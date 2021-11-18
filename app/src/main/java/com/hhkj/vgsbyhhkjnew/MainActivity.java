@@ -18,15 +18,21 @@ import com.hhkj.vgsbyhhkjnew.bean.PolygonGeometry;
 import com.hhkj.vgsbyhhkjnew.bean.RectGeometry;
 import com.hhkj.vgsbyhhkjnew.bean.TextGeometry;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.io.StringReader;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
+import java.util.List;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -66,10 +72,11 @@ public class MainActivity extends AppCompatActivity {
         gson = new Gson();
     }
 
+
     public byte[] readFile() {
         DataInputStream dis = null;
         try {
-            File binaryFile = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/devicemanagementclient/data/ajdz/vgs/source/25HZ轨道1送1.hzt");//25HZ轨道1送1
+            File binaryFile = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/devicemanagementclient/data/ajdz/vgs/source/" + Constants.fileName + ".hzt");//25HZ轨道1送1
             dis = new DataInputStream(new FileInputStream(binaryFile));
             byte[] b = new byte[(int) binaryFile.length()];
             dis.read(b);
@@ -111,32 +118,12 @@ public class MainActivity extends AppCompatActivity {
                 e.printStackTrace();
             }
         }
-        /*Set<Map.Entry<Integer, String>> set = KeyData.entrySet();
-        Iterator<Map.Entry<Integer, String>> it = set.iterator();
-        String yyy = "";
-        while (it.hasNext()) {
-            Map.Entry<Integer, String> entry = it.next();
-            Integer key = entry.getKey();
-            String value = entry.getValue();
-            yyy += "{Key:" + key + ";value:" + value + "},";
-        }
-        System.out.println(yyy);*/
 
-//blog.csdn.net/xiaohaizi15/article/details/106753736/
-        /*for (Map.Entry<Integer, String> m :KeyData.entrySet())  {
-
-            if (m.getValue().equals("Id")) {
-
-                System.out.println("{{{:"+m.getKey());
-
-            }}*/
         //解析
         Entity entity = new Entity();
-        //entity = analysis(entity, bb);
         entity = analysis(entity, bb);
         String json = gson.toJson(entity);
         System.out.println("===");
-        //Entity entityroot = new Entity();
         //转换数据格式
         ArrayList<Shape> shapes = new ArrayList<Shape>();
         for (int i = 0; i < entity.getSons().size(); i++) {
@@ -155,41 +142,14 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         }
-        //整理树形结构
-        /*ArrayList<Shape> shapesTree = new ArrayList<Shape>();
-        ArrayList<Shape> sps=page.getShapes();
-        sps.get(0);*/
 
-       /* for (int i = 0; i < shapes.size(); i++) {
-            if (shapes.get(i).getType() == 1) {
-                System.out.println("====" + i);
-            }
-        }*/
         System.out.println("----");
-        /*String avfindos = exchangetoJson(entityroot.getPage().getShapes(), new ArrayList<avfindo>());
-        System.out.println("----");*/
-        //skiaView skiaView= new skiaView(context,null);
-     /*   processCadFile(
-                context,
-                avfindos,
-                Constants.BASEFILEURL + Constants.STATIONCODE + "cad/transformation/" + "cache_测测测.avg"
-        );
-        Intent intent = new Intent(context, CadBridgeActivity.class);
-        startActivity(intent);*/
-        //ppp(shapes);
+        //String json1 = gson.toJson(shapes);
+        //writeString2File(json1, );
+        String path = Environment.getExternalStorageDirectory().getAbsolutePath() + "/devicemanagementclient/data/ajdz/vgs/source/" + Constants.fileName + ".txt";
+        FileWriteList1(path, shapes);
         Intent intent = new Intent(context, ViewActivity.class);
-        intent.putExtra("data", shapes);
         startActivity(intent);
-    }
-
-    private void ppp(ArrayList<Shape> shapes) {
-        for (int i = 0; i < shapes.size(); i++) {
-            if (shapes.get(i).getType() == 1) {
-                System.out.println("====:" + i + ";" + shapes.get(i).id);
-            } else if (shapes.get(i).getType() == 0) {
-                ppp(shapes.get(i).shapes);
-            }
-        }
     }
 
     private void aaa(ArrayList<Shape> shapes, Entity entity) {
@@ -227,7 +187,7 @@ public class MainActivity extends AppCompatActivity {
                                             HashMap<String, String> otherParameters5 = son6.getOtherParameters();
                                             shape.setX(Float.parseFloat(otherParameters5.get("X")));
                                             shape.setY(Float.parseFloat(otherParameters5.get("Y")));
-                                            shape.setRotateAngle(otherParameters5.get("RotateAngle"));
+                                            shape.setRotateAngle(Float.parseFloat(otherParameters5.get("RotateAngle")));
                                         }
                                     }
                                     break;
@@ -239,7 +199,7 @@ public class MainActivity extends AppCompatActivity {
                                             //将数字转为16进制的色值
                                             if (!otherParameters5.get("LineColor").equals("-1")) {
                                                 shape.setLineColor(Integer.toHexString(Integer.parseInt(otherParameters5.get("LineColor"))));
-                                                String color=Integer.toHexString(Integer.parseInt(otherParameters5.get("FillColor")));
+                                                String color = Integer.toHexString(Integer.parseInt(otherParameters5.get("FillColor")));
                                                 shape.setFillColor("#" + color.substring(color.length() - 8, color.length()));
                                                 shape.setFill(Boolean.parseBoolean(otherParameters5.get("IsFill")));
                                             }
@@ -322,10 +282,7 @@ public class MainActivity extends AppCompatActivity {
                                         Entity son6 = son5.getSons().get(i);
                                         if (son6.getName().equals("Properties")) {
                                             TextGeometry textGeometry = new TextGeometry();
-                                            /*if (!TextUtils.isEmpty(shape.getLineColor())) {
-                                                String color = shape.getLineColor();
-                                                textGeometry.setColor("#"+color.substring(color.length() - 8, color.length()));
-                                            }*/
+
                                             textGeometry.setText(son6.getOtherParameters().get("Text"));
 
                                             String color = Integer.toHexString(Integer.parseInt(son6.getOtherParameters().get("TextFontColor")));
@@ -351,18 +308,12 @@ public class MainActivity extends AppCompatActivity {
                         }
                     }
                 } else if (son4.getName().equals("Properties")) {
-                    //shape.setProperties(son4.getOtherParameters());
-                    //shape.setProperties(son4.getOtherParameters());
                     shape.setId(son4.getOtherParameters().get("Id"));
                     shape.setParentElementId(son4.getOtherParameters().get("ParentElementId"));
                 }
             }
         }
         shapes.add(shape);
-    }
-
-    private String hex10To16(int lineColor) {
-        return String.format("%08X", lineColor);
     }
 
 
@@ -377,18 +328,13 @@ public class MainActivity extends AppCompatActivity {
                 case 1:
                     Entity rs = new Entity();
                     rs.setName(KeyData.get(KeyIndex));
-                    /*if (KeyData.get(KeyIndex).equals("Shapes")) {
-                        System.out.println("=============");
-                    }*/
+
                     rs = analysis(rs, bb);
                     entity.getSons().add(rs);
                     break;
                 case 2:
                     int valueIndex = getIntValue(bb.get(), bb);
-                    /*System.out.println("====KeyIndex:"+KeyIndex+";Key:"+KeyData.get(KeyIndex)+";valueIndex:"+valueIndex+";value:"+KeyData.get(valueIndex));
-                    if(KeyData.get(KeyIndex)=="Id"){
-                        System.out.println("====Id:"+KeyData.get(valueIndex)+";valueIndex:"+valueIndex);
-                    }*/
+
                     otherParameters.put(KeyData.get(KeyIndex), KeyData.get(valueIndex));
                     break;
                 case 3:
@@ -444,11 +390,23 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    //25HZ轨道1送1.hzt
-    public void aa() {
+    /**
+     * 存储list到文件
+     *
+     * @param path
+     * @param list
+     */
+    @SuppressWarnings("resource")
+    public static <T> void FileWriteList1(String path, List<T> list) {
         try {
-            FileTransitionUtil.binaryToText(Environment.getExternalStorageDirectory().getAbsolutePath() + "/devicemanagementclient/data/ajdz/vgs/source/25HZ轨道1送1.hzt", Environment.getExternalStorageDirectory().getAbsolutePath() + "/devicemanagementclient/data/ajdz/vgs/txt/25HZ轨道1送1.txt");
-        } catch (Exception e) {
+            FileOutputStream outputStream = new FileOutputStream(path);
+            ObjectOutputStream stream = new ObjectOutputStream(outputStream);
+            stream.writeObject(list);
+            stream.close();
+            outputStream.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }

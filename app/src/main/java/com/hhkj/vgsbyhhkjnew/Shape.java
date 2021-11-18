@@ -11,10 +11,9 @@ public class Shape implements Serializable {
     private int type;//0.组合 1.线段 2.多边形 3.矩形 4.椭圆 5.文字
     private String TypeId;
     ArrayList<Entity> sons = new ArrayList<Entity>();
-    public String RotateAngle;
+    public Float RotateAngle;
     private boolean isInGroup;
     private Point rotateCenterbygroup;
-    public float angle;
     public Float x;
     public Float y;
     public String id;
@@ -34,11 +33,11 @@ public class Shape implements Serializable {
         this.id = id;
     }
 
-    public String getRotateAngle() {
+    public Float getRotateAngle() {
         return RotateAngle;
     }
 
-    public void setRotateAngle(String rotateAngle) {
+    public void setRotateAngle(Float rotateAngle) {
         RotateAngle = rotateAngle;
     }
 
@@ -58,13 +57,7 @@ public class Shape implements Serializable {
         this.rotateCenterbygroup = rotateCenterbygroup;
     }
 
-    public float getAngle() {
-        return angle;
-    }
 
-    public void setAngle(float angle) {
-        this.angle = angle;
-    }
 
     public BaseStar getStar() {
         return star;

@@ -15,6 +15,7 @@ import java.io.Serializable;
  * @Version: 1.0
  */
 public abstract class BaseStar implements Serializable {
+
     String color;
 
     public String getColor() {

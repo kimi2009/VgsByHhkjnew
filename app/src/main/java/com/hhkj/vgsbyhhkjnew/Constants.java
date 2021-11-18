@@ -14,6 +14,7 @@ public class Constants {
     public static String STATIONCODE="ajdz/";
     public static String FTP_DB = "hhkj.db";
     public static String BASE_HTML = "file:///android_asset/echarts/";
+    public static String fileName= "hzt2";//25HZ轨道1送1
 
     public static void sout(String msg){
         System.out.println("===="+msg);
