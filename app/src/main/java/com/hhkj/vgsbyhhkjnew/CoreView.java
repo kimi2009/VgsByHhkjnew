@@ -5,6 +5,9 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.RectF;
+import android.text.Layout;
+import android.text.StaticLayout;
+import android.text.TextPaint;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -61,6 +64,7 @@ public class CoreView extends View implements ScaleGestureDetector.OnScaleGestur
 
     // 线画笔
     private Paint magicPaint;
+    private TextPaint textPaint;
 
     private void init() {
         //System.out.println("===init");
@@ -69,6 +73,12 @@ public class CoreView extends View implements ScaleGestureDetector.OnScaleGestur
         magicPaint.setStrokeWidth(0);
         magicPaint.setStyle(Paint.Style.STROKE);
         magicPaint.setColor(Color.parseColor("#FFFFFFFF"));
+
+        textPaint = new TextPaint();
+        textPaint.setAntiAlias(true);
+        textPaint.setStrokeWidth(0);
+        textPaint.setStyle(Paint.Style.FILL);
+        textPaint.setColor(Color.parseColor("#FFFFFFFF"));
         initData();
     }
 
@@ -410,6 +420,11 @@ public class CoreView extends View implements ScaleGestureDetector.OnScaleGestur
                         magicPaint.setColor(Color.parseColor(shape.fillColor));
                     }
                     canvas.drawRect(new RectF(rectGeometry.getValue()[0], rectGeometry.getValue()[1], rectGeometry.getValue()[2], rectGeometry.getValue()[3]), magicPaint);
+                    if (shape.getDisFrame()) {
+                        magicPaint.setStyle(Paint.Style.STROKE);
+                        magicPaint.setColor(Color.parseColor(shape.getLineColor()));
+                        canvas.drawRect(new RectF(rectGeometry.getValue()[0], rectGeometry.getValue()[1], rectGeometry.getValue()[2], rectGeometry.getValue()[3]), magicPaint);
+                    }
                     break;
                 case 4://4.椭圆
                     EllipseGeometry ellipseGeometry = (EllipseGeometry) shape.getStar();
@@ -439,28 +454,35 @@ public class CoreView extends View implements ScaleGestureDetector.OnScaleGestur
                     Point p1textGeometry = playRectCenterPoint(textGeometry.getValue());
                     canvas.rotate(shape.getRotateAngle(), p1textGeometry.getX(), p1textGeometry.getY());
 
-                    magicPaint.setTextSize(textGeometry.getScalTextSize());
+                    textPaint.setTextSize(textGeometry.getScalTextSize());
                     RectF rectF = new RectF(textGeometry.getValue()[0], textGeometry.getValue()[1], textGeometry.getValue()[2], textGeometry.getValue()[3]);
                     //canvas.drawRect(rectF, magicPaint);
                     //计算baseline
-                    Paint.FontMetrics fontMetrics = magicPaint.getFontMetrics();
+                    Paint.FontMetrics fontMetrics = textPaint.getFontMetrics();
                     float distance = (fontMetrics.bottom - fontMetrics.top) / 2 - fontMetrics.bottom;
                     float baseline = rectF.centerY() + distance;
                     if (!TextUtils.isEmpty(textGeometry.getColor())) {
-                        magicPaint.setColor(Color.parseColor(textGeometry.getColor()));
+                        textPaint.setColor(Color.parseColor(textGeometry.getColor()));
                     }
                     if (textGeometry.getTextAlign().equals("1")) {
-                        magicPaint.setTextAlign(Paint.Align.CENTER);
-                        canvas.drawText(textGeometry.getText(), p1textGeometry.getX(), baseline, magicPaint);
+                        textPaint.setTextAlign(Paint.Align.CENTER);
+                        //(int) (textGeometry.getValue()[2] - textGeometry.getValue()[0])
+                        StaticLayout layoutopen = new StaticLayout(textGeometry.getText(), textPaint, (int) (textGeometry.getValue()[2] - textGeometry.getValue()[0]), Layout.Alignment.ALIGN_NORMAL, 1F, 1F, true);
+                        canvas.translate(rectF.centerX(), textGeometry.getValue()[1]);
+                        layoutopen.draw(canvas);
+                        //canvas.drawText(textGeometry.getText(), p1textGeometry.getX(), baseline, textPaint);
                     } else if (textGeometry.getTextAlign().equals("2")) {
-                        magicPaint.setTextAlign(Paint.Align.RIGHT);
-                        canvas.drawText(textGeometry.getText(), textGeometry.getValue()[2], baseline, magicPaint);
+                        textPaint.setTextAlign(Paint.Align.RIGHT);
+                        canvas.drawText(textGeometry.getText(), textGeometry.getValue()[2], baseline, textPaint);
                     }
                     break;
             }
             //重置画笔颜色
             magicPaint.setColor(Color.parseColor("#FFFFFFFF"));
             magicPaint.setStyle(Paint.Style.STROKE);
+            //重置画笔颜色
+            textPaint.setColor(Color.parseColor("#FFFFFFFF"));
+            textPaint.setStyle(Paint.Style.FILL);
             canvas.restore();
         }
 
@@ -538,9 +560,11 @@ public class CoreView extends View implements ScaleGestureDetector.OnScaleGestur
         return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp,
                 getResources().getDisplayMetrics());
     }
+
     private static final String TAG = CoreView.class.getSimpleName();
     //----------------------------------------------------------------以下为图像放缩
     float areaPersent = 10f;
+
     @Override
     public boolean onScale(ScaleGestureDetector detector) {
         float scaleFactor = detector.getScaleFactor();
@@ -611,7 +635,6 @@ public class CoreView extends View implements ScaleGestureDetector.OnScaleGestur
     }
 
 
-
     /**
      * 计算图元的点击区域
      *
@@ -624,7 +647,7 @@ public class CoreView extends View implements ScaleGestureDetector.OnScaleGestur
                     //计算组合的边界，点击时将组合看做一个整体
                     ArrayList xList = new ArrayList<Float>();
                     ArrayList yList = new ArrayList<Float>();
-                    initClickBoundary( shape.shapes, xList, yList);
+                    initClickBoundary(shape.shapes, xList, yList);
                     float shapex1 = (float) Collections.min(xList);
                     float shapey1 = (float) Collections.min(yList);
                     float shapex2 = (float) Collections.max(xList);
@@ -708,13 +731,13 @@ public class CoreView extends View implements ScaleGestureDetector.OnScaleGestur
         }
     }
 
-    private void initClickBoundary( ArrayList<Shape> shapeLists, ArrayList xList, ArrayList yList) {
+    private void initClickBoundary(ArrayList<Shape> shapeLists, ArrayList xList, ArrayList yList) {
         for (Shape shape : shapeLists) {
             switch (shape.getType()) {//0.组合
                 case 0:
                     ArrayList mxList = new ArrayList<Float>();
                     ArrayList myList = new ArrayList<Float>();
-                    initClickBoundary( shape.shapes, mxList, myList);
+                    initClickBoundary(shape.shapes, mxList, myList);
                     xList.addAll(mxList);
                     yList.addAll(myList);
                     float shapex1 = (float) Collections.min(mxList);
@@ -789,6 +812,7 @@ public class CoreView extends View implements ScaleGestureDetector.OnScaleGestur
             }
         }
     }
+
     /*private void doGroupCenter(ArrayList<Shape> shapeLists) {
         for (Shape shape : shapeLists) {
             switch (shape.getType()) {//0.组合

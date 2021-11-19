@@ -198,12 +198,17 @@ public class MainActivity extends AppCompatActivity {
                                             HashMap<String, String> otherParameters5 = son6.getOtherParameters();
                                             //将数字转为16进制的色值
                                             if (!otherParameters5.get("LineColor").equals("-1")) {
-                                                shape.setLineColor(Integer.toHexString(Integer.parseInt(otherParameters5.get("LineColor"))));
-                                                String color = Integer.toHexString(Integer.parseInt(otherParameters5.get("FillColor")));
-                                                shape.setFillColor("#" + color.substring(color.length() - 8, color.length()));
-                                                shape.setFill(Boolean.parseBoolean(otherParameters5.get("IsFill")));
+                                                String color0 = Integer.toHexString(Integer.parseInt(otherParameters5.get("LineColor")));
+                                                shape.setLineColor("#" + color0.substring(color0.length() - 8, color0.length()));
+                                                shape.setDisFrame(Boolean.parseBoolean(otherParameters5.get("IsDisFrame")));
                                             }
-
+                                            if (!otherParameters5.get("FillColor").equals("-1")) {
+                                                String color = Integer.toHexString(Integer.parseInt(otherParameters5.get("FillColor")));
+                                                if(color.length()>=8){
+                                                    shape.setFillColor("#" + color.substring(color.length() - 8, color.length()));
+                                                    shape.setFill(Boolean.parseBoolean(otherParameters5.get("IsFill")));
+                                                }
+                                            }
                                         }
                                     }
                                     break;

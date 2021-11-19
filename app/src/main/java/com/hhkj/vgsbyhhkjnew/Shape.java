@@ -17,9 +17,10 @@ public class Shape implements Serializable {
     public Float x;
     public Float y;
     public String id;
-    public Boolean isFill;
-    public String LineColor;
+    public Boolean isFill = false;
     public String fillColor;
+    public Boolean isDisFrame;
+    public String LineColor;
     public String ParentElementId;
     public BaseStar star;
     public ArrayList<Shape> shapes = new ArrayList<Shape>();
@@ -57,7 +58,13 @@ public class Shape implements Serializable {
         this.rotateCenterbygroup = rotateCenterbygroup;
     }
 
+    public Boolean getDisFrame() {
+        return isDisFrame;
+    }
 
+    public void setDisFrame(Boolean disFrame) {
+        isDisFrame = disFrame;
+    }
 
     public BaseStar getStar() {
         return star;
