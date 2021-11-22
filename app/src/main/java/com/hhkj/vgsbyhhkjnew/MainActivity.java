@@ -204,11 +204,13 @@ public class MainActivity extends AppCompatActivity {
                                             }
                                             if (!otherParameters5.get("FillColor").equals("-1")) {
                                                 String color = Integer.toHexString(Integer.parseInt(otherParameters5.get("FillColor")));
-                                                if(color.length()>=8){
+                                                if (color.length() >= 8) {
                                                     shape.setFillColor("#" + color.substring(color.length() - 8, color.length()));
                                                     shape.setFill(Boolean.parseBoolean(otherParameters5.get("IsFill")));
                                                 }
                                             }
+                                            shape.setLineDashStyle(Integer.parseInt(otherParameters5.get("LineDashStyle")));
+                                            shape.setFillBrushType(Integer.parseInt(otherParameters5.get("FillBrushType")));
                                         }
                                     }
                                     break;
@@ -294,6 +296,7 @@ public class MainActivity extends AppCompatActivity {
                                             textGeometry.setColor("#" + color.substring(color.length() - 8, color.length()));
                                             textGeometry.setTextSize(Float.parseFloat(son6.getOtherParameters().get("TextFontSize")));
                                             textGeometry.setTextAlign(son6.getOtherParameters().get("TextAlign"));
+                                            textGeometry.setWordWrapping(Integer.parseInt(son6.getOtherParameters().get("WordWrapping")));
                                             textGeometry.setRectHeight(son6.getOtherParameters().get("RectHeight"));
                                             textGeometry.setRectWidth(son6.getOtherParameters().get("RectWidth"));
                                             textGeometry.setRectLeft(son6.getOtherParameters().get("RectLeft"));

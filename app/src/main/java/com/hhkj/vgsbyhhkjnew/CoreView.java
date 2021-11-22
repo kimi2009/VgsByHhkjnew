@@ -3,7 +3,9 @@ package com.hhkj.vgsbyhhkjnew;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.DashPathEffect;
 import android.graphics.Paint;
+import android.graphics.PathEffect;
 import android.graphics.RectF;
 import android.text.Layout;
 import android.text.StaticLayout;
@@ -63,7 +65,7 @@ public class CoreView extends View implements ScaleGestureDetector.OnScaleGestur
     }
 
     // 线画笔
-    private Paint magicPaint;
+    private Paint magicPaint, mDashPaint;
     private TextPaint textPaint;
 
     private void init() {
@@ -73,6 +75,12 @@ public class CoreView extends View implements ScaleGestureDetector.OnScaleGestur
         magicPaint.setStrokeWidth(0);
         magicPaint.setStyle(Paint.Style.STROKE);
         magicPaint.setColor(Color.parseColor("#FFFFFFFF"));
+
+        mDashPaint = new Paint();
+        mDashPaint.setAntiAlias(true);
+        mDashPaint.setStrokeWidth(0);
+        mDashPaint.setStyle(Paint.Style.STROKE);
+        mDashPaint.setColor(Color.parseColor("#FFFFFFFF"));
 
         textPaint = new TextPaint();
         textPaint.setAntiAlias(true);
@@ -379,11 +387,23 @@ public class CoreView extends View implements ScaleGestureDetector.OnScaleGestur
                     Point p0 = playpolygonCenterPoint(line.getPointsValue());
                     canvas.rotate(shape.getRotateAngle(), p0.getX(), p0.getY());
 
-                    if (!TextUtils.isEmpty(line.getColor())) {
-                        magicPaint.setColor(Color.parseColor(line.getColor()));
-                    }
+
                     //画
-                    canvas.drawLines(floats, magicPaint);
+                    if (shape.getLineDashStyle() == 0) {
+                        if (!TextUtils.isEmpty(line.getColor())) {
+                            magicPaint.setColor(Color.parseColor(line.getColor()));
+                        }
+                        canvas.drawLines(floats, magicPaint);
+                    } else if (shape.getLineDashStyle() == 1) {
+                        //虚线
+                        if (!TextUtils.isEmpty(line.getColor())) {
+                            mDashPaint.setColor(Color.parseColor(line.getColor()));
+                        }
+                        PathEffect effect = new DashPathEffect(new float[]{5, 5}, 1);
+                        mDashPaint.setAntiAlias(true);
+                        mDashPaint.setPathEffect(effect);
+                        canvas.drawLines(floats, mDashPaint);
+                    }
                     break;
                 case 2://2.多边形
                     PolygonGeometry polygonGeometry = (PolygonGeometry) shape.getStar();
@@ -415,7 +435,7 @@ public class CoreView extends View implements ScaleGestureDetector.OnScaleGestur
                     if (!TextUtils.isEmpty(rectGeometry.getColor())) {
                         magicPaint.setColor(Color.parseColor(rectGeometry.getColor()));
                     }
-                    if (shape.getFill()) {
+                    if (shape.getFill()&&shape.getFillBrushType()==0) {
                         magicPaint.setStyle(Paint.Style.FILL);
                         magicPaint.setColor(Color.parseColor(shape.fillColor));
                     }
@@ -437,7 +457,7 @@ public class CoreView extends View implements ScaleGestureDetector.OnScaleGestur
                     if (!TextUtils.isEmpty(ellipseGeometry.getColor())) {
                         magicPaint.setColor(Color.parseColor(ellipseGeometry.getColor()));
                     }
-                    if (shape.getFill()) {
+                    if (shape.getFill()&&shape.getFillBrushType()==0) {
                         magicPaint.setStyle(Paint.Style.FILL);
                         magicPaint.setColor(Color.parseColor(shape.fillColor));
                     }
@@ -466,11 +486,13 @@ public class CoreView extends View implements ScaleGestureDetector.OnScaleGestur
                     }
                     if (textGeometry.getTextAlign().equals("1")) {
                         textPaint.setTextAlign(Paint.Align.CENTER);
-                        //(int) (textGeometry.getValue()[2] - textGeometry.getValue()[0])
-                        StaticLayout layoutopen = new StaticLayout(textGeometry.getText(), textPaint, (int) (textGeometry.getValue()[2] - textGeometry.getValue()[0]), Layout.Alignment.ALIGN_NORMAL, 1F, 1F, true);
-                        canvas.translate(rectF.centerX(), textGeometry.getValue()[1]);
-                        layoutopen.draw(canvas);
-                        //canvas.drawText(textGeometry.getText(), p1textGeometry.getX(), baseline, textPaint);
+                        if (textGeometry.getWordWrapping() == 0) {
+                            canvas.drawText(textGeometry.getText(), p1textGeometry.getX(), baseline, textPaint);
+                        } else {
+                            StaticLayout layoutopen = new StaticLayout(textGeometry.getText(), textPaint, (int) (textGeometry.getValue()[2] - textGeometry.getValue()[0]), Layout.Alignment.ALIGN_NORMAL, 1F, 1F, true);
+                            canvas.translate(rectF.centerX(), textGeometry.getValue()[1]);
+                            layoutopen.draw(canvas);
+                        }
                     } else if (textGeometry.getTextAlign().equals("2")) {
                         textPaint.setTextAlign(Paint.Align.RIGHT);
                         canvas.drawText(textGeometry.getText(), textGeometry.getValue()[2], baseline, textPaint);

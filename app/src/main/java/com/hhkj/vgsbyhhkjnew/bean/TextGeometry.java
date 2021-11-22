@@ -20,6 +20,7 @@ public class TextGeometry extends BaseStar {
     String RectWidth;
     String RectLeft;
     String RectTop;
+    int WordWrapping;
     String TextAlign;//1 居中  2右对齐
     Float[] value = new Float[4];
     Float[] area;
@@ -43,6 +44,14 @@ public class TextGeometry extends BaseStar {
 
     public float getTextSize() {
         return textSize;
+    }
+
+    public int getWordWrapping() {
+        return WordWrapping;
+    }
+
+    public void setWordWrapping(int wordWrapping) {
+        WordWrapping = wordWrapping;
     }
 
     public void setTextSize(float textSize) {

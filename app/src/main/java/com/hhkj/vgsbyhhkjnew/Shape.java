@@ -19,6 +19,8 @@ public class Shape implements Serializable {
     public String id;
     public Boolean isFill = false;
     public String fillColor;
+    private int lineDashStyle;
+    private int FillBrushType;
     public Boolean isDisFrame;
     public String LineColor;
     public String ParentElementId;
@@ -104,6 +106,22 @@ public class Shape implements Serializable {
 
     public void setLineColor(String lineColor) {
         LineColor = lineColor;
+    }
+
+    public int getLineDashStyle() {
+        return lineDashStyle;
+    }
+
+    public void setLineDashStyle(int lineDashStyle) {
+        this.lineDashStyle = lineDashStyle;
+    }
+
+    public int getFillBrushType() {
+        return FillBrushType;
+    }
+
+    public void setFillBrushType(int fillBrushType) {
+        FillBrushType = fillBrushType;
     }
 
     public String getFillColor() {
