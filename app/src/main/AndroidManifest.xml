@@ -35,6 +35,10 @@
             android:name=".ViewActivity"
             android:launchMode="standard"
             android:screenOrientation="landscape" />
+        <activity
+            android:name=".VgsListActivity"
+            android:launchMode="standard"
+            android:screenOrientation="portrait" />
     </application>
 
 </manifest>

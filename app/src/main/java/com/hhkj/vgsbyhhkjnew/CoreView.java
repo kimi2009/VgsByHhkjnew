@@ -27,6 +27,7 @@ import com.hhkj.vgsbyhhkjnew.bean.Point;
 import com.hhkj.vgsbyhhkjnew.bean.PolygonGeometry;
 import com.hhkj.vgsbyhhkjnew.bean.RectGeometry;
 import com.hhkj.vgsbyhhkjnew.bean.TextGeometry;
+import com.qmuiteam.qmui.widget.dialog.QMUITipDialog;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -53,9 +54,12 @@ public class CoreView extends View implements ScaleGestureDetector.OnScaleGestur
         this(context, null);
     }
 
+
+
     public CoreView(Context context, @Nullable AttributeSet attrs) {
         this(context, attrs, 0);
         this.context = context;
+
         init();//准备工作
         mScaleGestureDetector = new ScaleGestureDetector(context, this);
     }
@@ -193,12 +197,12 @@ public class CoreView extends View implements ScaleGestureDetector.OnScaleGestur
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
         drawVgsView(canvas, shapes);
-
         if (isTest) {
             for (int i = 0; i < testClickZone.size(); i++) {
                 canvas.drawRect(new RectF(testClickZone.get(i)[0], testClickZone.get(i)[1], testClickZone.get(i)[2], testClickZone.get(i)[3]), magicPaint);
             }
         }
+
     }
 
     float scalpercent = 0.8f;
@@ -435,7 +439,7 @@ public class CoreView extends View implements ScaleGestureDetector.OnScaleGestur
                     if (!TextUtils.isEmpty(rectGeometry.getColor())) {
                         magicPaint.setColor(Color.parseColor(rectGeometry.getColor()));
                     }
-                    if (shape.getFill()&&shape.getFillBrushType()==0) {
+                    if (shape.getFill() && shape.getFillBrushType() == 0) {
                         magicPaint.setStyle(Paint.Style.FILL);
                         magicPaint.setColor(Color.parseColor(shape.fillColor));
                     }
@@ -457,7 +461,7 @@ public class CoreView extends View implements ScaleGestureDetector.OnScaleGestur
                     if (!TextUtils.isEmpty(ellipseGeometry.getColor())) {
                         magicPaint.setColor(Color.parseColor(ellipseGeometry.getColor()));
                     }
-                    if (shape.getFill()&&shape.getFillBrushType()==0) {
+                    if (shape.getFill() && shape.getFillBrushType() == 0) {
                         magicPaint.setStyle(Paint.Style.FILL);
                         magicPaint.setColor(Color.parseColor(shape.fillColor));
                     }
