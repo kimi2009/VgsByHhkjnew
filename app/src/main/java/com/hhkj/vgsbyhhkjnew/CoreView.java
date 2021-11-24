@@ -236,7 +236,7 @@ public class CoreView extends View implements ScaleGestureDetector.OnScaleGestur
 
     //递归计算所有图元的坐标值 以及旋转角度
     private void scale(float scal, float baseX, float baseY, ArrayList<Shape> shapeLists) {
-        if(shapeLists.size()==0){
+        if(shapeLists==null){
             return;
         }
         for (Shape shape : shapeLists) {

@@ -49,53 +49,37 @@ public class ViewActivity extends Activity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.view_activity);
+
         String fileName = getIntent().getStringExtra("filename");
         tipDialog = new QMUITipDialog.Builder(context)
                 .setIconType(QMUITipDialog.Builder.ICON_TYPE_LOADING)
                 .setTipWord("正在渲染,请稍候")
                 .create();
-        //tipDialog.show();
-        ProgressDialog waitingDialog =
-                new ProgressDialog(context);
-        waitingDialog.setTitle("我是一个等待Dialog");
-        waitingDialog.setMessage("等待中...");
-        waitingDialog.setIndeterminate(true);
-        waitingDialog.setCancelable(false);
-        waitingDialog.show();
-        CoreView coreView = findViewById(R.id.parentView);
-        long time0 = System.currentTimeMillis();
-        String path = Environment.getExternalStorageDirectory().getAbsolutePath() + "/devicemanagementclient/data/ajdz/vgs/transformation/" + fileName;
-        String jsonString=readFile(path);
-       Gson gson = new GsonBuilder()
-                .registerTypeAdapter(BaseStar.class, new BaseStarAdapter())
-                .create();
-        ArrayList<Shape> shapes = gson.fromJson(jsonString, new TypeToken<ArrayList<Shape>>() {
-        }.getType());
+        tipDialog.show();
 
-        //ArrayList<Shape> shapes = FileInputList(path);
-        long time1 = System.currentTimeMillis();
-        Log.e(TAG, "time1-time0:" + (time1 - time0));
-        //LinearLayout groupView = findViewById(R.id.groupView);
-        coreView.setData(shapes);
-        long time2 = System.currentTimeMillis();
-        Log.e(TAG, "time2-time1:" + (time2 - time1));
         new Thread(new Runnable() {
             @Override
             public void run() {
-                coreView.initData();
-                long time3 = System.currentTimeMillis();
-                Log.e(TAG, "time3-time2:" + (time3 - time2));
+                String path = Environment.getExternalStorageDirectory().getAbsolutePath() + "/devicemanagementclient/data/ajdz/vgs/transformation/" + fileName;
+                String jsonString = readFile(path);
+                Gson gson = new GsonBuilder()
+                        .registerTypeAdapter(BaseStar.class, new BaseStarAdapter())
+                        .create();
+                ArrayList<Shape> shapes = gson.fromJson(jsonString, new TypeToken<ArrayList<Shape>>() {
+                }.getType());
+
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
+                        setContentView(R.layout.view_activity);
+                        CoreView coreView = findViewById(R.id.parentView);
+                        //LinearLayout groupView = findViewById(R.id.groupView);
+                        coreView.setData(shapes);
+                        coreView.initData();
                         coreView.invalidate();
-                        long time4 = System.currentTimeMillis();
-                        Log.e(TAG, "time4-time3:" + (time4 - time3));
-                        waitingDialog.dismiss();
+                        tipDialog.dismiss();
                     }
                 });
-
             }
         }).start();
 
@@ -103,12 +87,12 @@ public class ViewActivity extends Activity {
         bind.setFullGroup(true);*/
     }
 
-    public static String readFile(String filePath)  {
+    public static String readFile(String filePath) {
         StringBuffer sb = new StringBuffer();
         try {
             readToBuffer(sb, filePath);
-        }catch (Exception e){
-          e.printStackTrace();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
 
         return sb.toString();
@@ -128,27 +112,5 @@ public class ViewActivity extends Activity {
         is.close();
     }
 
-    /**
-     * 获取本地文件中的list
-     *
-     * @param path
-     * @return
-     */
-
-    @SuppressWarnings("resource")
-    public static <Shape> ArrayList<com.hhkj.vgsbyhhkjnew.Shape> FileInputList(String path) {
-        ArrayList<com.hhkj.vgsbyhhkjnew.Shape> list = null;
-        try {
-            FileInputStream inputStream = new FileInputStream(path);
-            ObjectInputStream stream = new ObjectInputStream(inputStream);
-            list = (ArrayList<com.hhkj.vgsbyhhkjnew.Shape>) stream.readObject();
-            inputStream.close();
-            stream.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return list;
-    }
 
 }
