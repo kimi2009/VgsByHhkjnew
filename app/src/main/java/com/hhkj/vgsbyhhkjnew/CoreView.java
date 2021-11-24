@@ -120,7 +120,7 @@ public class CoreView extends View implements ScaleGestureDetector.OnScaleGestur
     private void initBoundary(float baseX, float baseY, ArrayList<Shape> shapeLists, ArrayList<Float> xList, ArrayList<Float> yList, boolean isIngroup) {
         //System.out.println("===initBoundary");
         for (Shape shape : shapeLists) {
-            switch (shape.getType()) {//0.组合
+            switch (shape.getTypes()) {//0.组合
                 case 0:
                     initBoundary(baseX + shape.x, baseY + shape.y, shape.shapes, xList, yList, true);
                     break;
@@ -236,8 +236,11 @@ public class CoreView extends View implements ScaleGestureDetector.OnScaleGestur
 
     //递归计算所有图元的坐标值 以及旋转角度
     private void scale(float scal, float baseX, float baseY, ArrayList<Shape> shapeLists) {
+        if(shapeLists.size()==0){
+            return;
+        }
         for (Shape shape : shapeLists) {
-            switch (shape.getType()) {//0.组合
+            switch (shape.getTypes()) {//0.组合
                 case 0:
                     scale(scal, baseX + shape.x, baseY + shape.y, shape.shapes);
                     break;
@@ -373,7 +376,7 @@ public class CoreView extends View implements ScaleGestureDetector.OnScaleGestur
         }
         for (Shape shape : shapeLists) {
             canvas.save();
-            switch (shape.getType()) {//0.组合
+            switch (shape.getTypes()) {//0.组合
                 case 0:
                     canvas.rotate(shape.getRotateAngle(), shape.getRotateCenterbygroup().getX(), shape.getRotateCenterbygroup().getY());
                     drawVgsView(canvas, shape.shapes);
@@ -668,7 +671,7 @@ public class CoreView extends View implements ScaleGestureDetector.OnScaleGestur
      */
     private void doClickZone(ArrayList<Shape> shapeLists) {
         for (Shape shape : shapeLists) {
-            switch (shape.getType()) {//0.组合
+            switch (shape.getTypes()) {//0.组合
                 case 0:
                     //计算组合的边界，点击时将组合看做一个整体
                     ArrayList xList = new ArrayList<Float>();
@@ -759,7 +762,7 @@ public class CoreView extends View implements ScaleGestureDetector.OnScaleGestur
 
     private void initClickBoundary(ArrayList<Shape> shapeLists, ArrayList xList, ArrayList yList) {
         for (Shape shape : shapeLists) {
-            switch (shape.getType()) {//0.组合
+            switch (shape.getTypes()) {//0.组合
                 case 0:
                     ArrayList mxList = new ArrayList<Float>();
                     ArrayList myList = new ArrayList<Float>();
@@ -965,7 +968,7 @@ public class CoreView extends View implements ScaleGestureDetector.OnScaleGestur
                         Shape clickShape = getModelId(event.getX(), event.getY());
                         if (clickShape != null) {
                             // Log.e(TAG, "单击id:" + clickShape.id);
-                            Toast.makeText(context, "您选了" + clickShape.getType() + "---" + clickShape.id, Toast.LENGTH_SHORT).show();
+                            Toast.makeText(context, "您选了" + clickShape.getTypes() + "---" + clickShape.id, Toast.LENGTH_SHORT).show();
                             if (isTest) {
                                 invalidate();
                             }
@@ -1003,7 +1006,7 @@ public class CoreView extends View implements ScaleGestureDetector.OnScaleGestur
     private Shape getModelId(float x, float y) {
         testClickZone.clear();
         for (Shape shape : shapes) {
-            switch (shape.getType()) {//0.组合
+            switch (shape.getTypes()) {//0.组合
                 case 0:
                     //计算是否落袋
                     /*if (shape.id.equals("{46C73A29-6F6F-4e81-B811-3171D899D6B5}")) {

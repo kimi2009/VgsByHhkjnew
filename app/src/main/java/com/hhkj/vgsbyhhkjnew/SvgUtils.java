@@ -6,19 +6,29 @@ import android.os.Environment;
 import android.text.TextUtils;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
+import com.hhkj.vgsbyhhkjnew.bean.BaseStar;
+import com.hhkj.vgsbyhhkjnew.bean.BaseStarAdapter;
 import com.hhkj.vgsbyhhkjnew.bean.EllipseGeometry;
 import com.hhkj.vgsbyhhkjnew.bean.Line;
 import com.hhkj.vgsbyhhkjnew.bean.PolygonGeometry;
 import com.hhkj.vgsbyhhkjnew.bean.RectGeometry;
 import com.hhkj.vgsbyhhkjnew.bean.TextGeometry;
+import com.hhkj.vgsbyhhkjnew.test.BaseBO;
+import com.hhkj.vgsbyhhkjnew.test.BaseBoAdapter;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
+import java.io.StringReader;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -46,19 +56,22 @@ public class SvgUtils {
     public SvgUtils(Context context) {
         this.context = context;
         utils = new Utils();
-        gson = new Gson();
+         gson = new GsonBuilder()
+                .registerTypeAdapter(BaseStar.class, new BaseStarAdapter())
+                .create();
+        //gson=new Gson();
     }
 
-    public void processSvgFile(String fileName,String sourcePath, String cachePath) {
-        this.fileName=fileName;
-        this.cachePath=cachePath;
+    public void processSvgFile(String fileName, String sourcePath, String cachePath) {
+        this.fileName = fileName;
+        this.cachePath = cachePath;
         analysisData(readFile(sourcePath));
     }
 
     public byte[] readFile(String sourcePath) {
         DataInputStream dis = null;
         try {
-            File binaryFile = new File(sourcePath+fileName+".hzt");//25HZ轨道1送1
+            File binaryFile = new File(sourcePath + fileName + ".hzt");//25HZ轨道1送1
             dis = new DataInputStream(new FileInputStream(binaryFile));
             byte[] b = new byte[(int) binaryFile.length()];
             dis.read(b);
@@ -125,12 +138,14 @@ public class SvgUtils {
         }
 
         System.out.println("----");
-        //String json1 = gson.toJson(shapes);
-        //writeString2File(json1, );
         String path = cachePath + fileName + ".txt";
-        FileWriteList1(path, shapes);
+        String json1 = gson.toJson(shapes,new TypeToken<ArrayList<Shape>>() {
+        }.getType());
+        writeString2File(json1, path);
+        //FileWriteList1(path, shapes);
 
     }
+
     private Entity analysis(Entity entity, ByteBuffer bb) {
         byte bora = bb.get();
         int valueCount = getIntValue(bora, bb);
@@ -179,6 +194,7 @@ public class SvgUtils {
         }
         return entity;
     }
+
     private void aaa(ArrayList<Shape> shapes, Entity entity) {
         Shape shape = new Shape();
         if (entity.getOtherParameters().get("TypeId").equals("ShapeObject")) {
@@ -242,7 +258,7 @@ public class SvgUtils {
                                     }
                                     break;
                                 case "GeometryComponent"://组合
-                                    shape.setType(0);
+                                    shape.setTypes(0);
                                     break;
                                 case "PolylineGeometryComponent"://线段
                                     for (int i = 0; i < son5.getSons().size(); i++) {
@@ -255,7 +271,7 @@ public class SvgUtils {
                                                 line.setColor("#" + color.substring(color.length() - 8, color.length()));
                                             }
                                             shape.setStar(line);
-                                            shape.setType(1);
+                                            shape.setTypes(1);
                                         }
                                     }
 
@@ -271,7 +287,7 @@ public class SvgUtils {
                                                 polygonGeometry.setColor("#" + color.substring(color.length() - 8, color.length()));
                                             }
                                             shape.setStar(polygonGeometry);
-                                            shape.setType(2);
+                                            shape.setTypes(2);
                                         }
                                     }
                                     break;
@@ -289,7 +305,7 @@ public class SvgUtils {
                                             rectGeometry.setRectLeft(son6.getOtherParameters().get("RectLeft"));
                                             rectGeometry.setRectTop(son6.getOtherParameters().get("RectTop"));
                                             shape.setStar(rectGeometry);
-                                            shape.setType(3);
+                                            shape.setTypes(3);
                                         }
                                     }
                                     break;
@@ -307,7 +323,7 @@ public class SvgUtils {
                                             ellipseGeometry.setRectLeft(son6.getOtherParameters().get("RectLeft"));
                                             ellipseGeometry.setRectTop(son6.getOtherParameters().get("RectTop"));
                                             shape.setStar(ellipseGeometry);
-                                            shape.setType(4);
+                                            shape.setTypes(4);
                                         }
                                     }
                                     break;
@@ -329,7 +345,7 @@ public class SvgUtils {
                                             textGeometry.setRectLeft(son6.getOtherParameters().get("RectLeft"));
                                             textGeometry.setRectTop(son6.getOtherParameters().get("RectTop"));
                                             shape.setStar(textGeometry);
-                                            shape.setType(5);
+                                            shape.setTypes(5);
                                         }
                                     }
                                     break;
@@ -350,6 +366,44 @@ public class SvgUtils {
         }
         shapes.add(shape);
     }
+
+    public File writeString2File(String Data, String filePath) {
+        BufferedReader bufferedReader = null;
+
+        BufferedWriter bufferedWriter = null;
+
+        File distFile = null;
+
+        try {
+            distFile = new File(filePath);
+
+            if (!distFile.getParentFile().exists()) distFile.getParentFile().mkdirs();
+
+            bufferedReader = new BufferedReader(new StringReader(Data));
+
+            bufferedWriter = new BufferedWriter(new FileWriter(distFile));
+
+            char buf[] = new char[1024]; //字符缓冲区
+
+            int len;
+
+            while ((len = bufferedReader.read(buf)) != -1) {
+                bufferedWriter.write(buf, 0, len);
+
+            }
+
+            bufferedWriter.flush();
+
+            bufferedReader.close();
+
+            bufferedWriter.close();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return distFile;
+    }
+
     /**
      * 存储list到文件
      *
@@ -357,7 +411,7 @@ public class SvgUtils {
      * @param list
      */
     @SuppressWarnings("resource")
-    public static <T> void FileWriteList1(String path, List<T> list) {
+    public static <T> void FileWriteList10(String path, List<T> list) {
         try {
             FileOutputStream outputStream = new FileOutputStream(path);
             ObjectOutputStream stream = new ObjectOutputStream(outputStream);
@@ -370,6 +424,7 @@ public class SvgUtils {
             e.printStackTrace();
         }
     }
+
     public String format(String aa) {
         if (aa.length() == 1) {
             return "0" + aa;
@@ -377,6 +432,7 @@ public class SvgUtils {
             return aa;
         }
     }
+
     public int getIntValue(byte bora, ByteBuffer bb) {
         if (bora == -1) {
             return NetUtils.bytes2Int(utils.analysisByte(bb, 4), NetUtils.LOW_FRONT);
@@ -386,6 +442,7 @@ public class SvgUtils {
             return getUnsignedByte(bora);
         }
     }
+
     public int getUnsignedByte(byte data) {      //将data字节型数据转换为0~255 (0xFF 即BYTE)。
         return data & 0x0FF; // 部分编译器会把最高位当做符号位，因此写成0x0FF.
     }

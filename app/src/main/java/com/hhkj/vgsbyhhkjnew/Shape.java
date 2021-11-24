@@ -8,7 +8,7 @@ import java.util.ArrayList;
 
 public class Shape implements Serializable {
     private String name;
-    private int type;//0.组合 1.线段 2.多边形 3.矩形 4.椭圆 5.文字
+    private int types;//0.组合 1.线段 2.多边形 3.矩形 4.椭圆 5.文字
     private String TypeId;
     ArrayList<Entity> sons = new ArrayList<Entity>();
     public Float RotateAngle;
@@ -132,12 +132,12 @@ public class Shape implements Serializable {
         this.fillColor = fillColor;
     }
 
-    public int getType() {
-        return type;
+    public int getTypes() {
+        return types;
     }
 
-    public void setType(int type) {
-        this.type = type;
+    public void setTypes(int types) {
+        this.types = types;
     }
 
     public String getTypeId() {
