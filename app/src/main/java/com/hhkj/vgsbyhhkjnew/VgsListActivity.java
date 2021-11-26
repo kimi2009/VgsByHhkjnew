@@ -107,7 +107,7 @@ public class VgsListActivity extends Activity {
             }).start();
 
         } else {
-            //刷新页面
+             //刷新页面
             refreshPage();
         }
 

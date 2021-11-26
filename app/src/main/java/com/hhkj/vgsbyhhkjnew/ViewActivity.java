@@ -78,6 +78,7 @@ public class ViewActivity extends Activity {
                         coreView.initData();
                         coreView.invalidate();
                         tipDialog.dismiss();
+
                     }
                 });
             }
@@ -94,7 +95,6 @@ public class ViewActivity extends Activity {
         } catch (Exception e) {
             e.printStackTrace();
         }
-
         return sb.toString();
     }
 
@@ -112,5 +112,9 @@ public class ViewActivity extends Activity {
         is.close();
     }
 
-
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        tipDialog.dismiss();
+    }
 }

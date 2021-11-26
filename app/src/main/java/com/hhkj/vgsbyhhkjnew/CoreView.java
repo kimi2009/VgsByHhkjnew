@@ -55,7 +55,6 @@ public class CoreView extends View implements ScaleGestureDetector.OnScaleGestur
     }
 
 
-
     public CoreView(Context context, @Nullable AttributeSet attrs) {
         this(context, attrs, 0);
         this.context = context;
@@ -196,7 +195,10 @@ public class CoreView extends View implements ScaleGestureDetector.OnScaleGestur
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
+        long time0 = System.currentTimeMillis();
         drawVgsView(canvas, shapes);
+        long time1 = System.currentTimeMillis();
+        Log.e(TAG, "drawVgsView耗时：" + (time1 - time0));
         if (isTest) {
             for (int i = 0; i < testClickZone.size(); i++) {
                 canvas.drawRect(new RectF(testClickZone.get(i)[0], testClickZone.get(i)[1], testClickZone.get(i)[2], testClickZone.get(i)[3]), magicPaint);
@@ -236,7 +238,8 @@ public class CoreView extends View implements ScaleGestureDetector.OnScaleGestur
 
     //递归计算所有图元的坐标值 以及旋转角度
     private void scale(float scal, float baseX, float baseY, ArrayList<Shape> shapeLists) {
-        if(shapeLists==null){
+
+        if (shapeLists == null) {
             return;
         }
         for (Shape shape : shapeLists) {
@@ -597,7 +600,12 @@ public class CoreView extends View implements ScaleGestureDetector.OnScaleGestur
     @Override
     public boolean onScale(ScaleGestureDetector detector) {
         float scaleFactor = detector.getScaleFactor();
-        //Log.e(TAG, "scaleFactor：" + scaleFactor);
+        Log.e(TAG, "scaleFactor：" + scaleFactor);
+
+        /*if (scaleFactor > 0.99 && scaleFactor < 1.03) {
+            return true;
+        }*/
+
         viewLastScal = viewLastScal * scaleFactor;
         //Log.e(TAG, "viewLastScal：" + viewLastScal);
         if (viewLastScal > SCALE_MAX) {//超限，太大了
@@ -655,12 +663,15 @@ public class CoreView extends View implements ScaleGestureDetector.OnScaleGestur
     }
 
     private void doScaleValue() {
+        long time0 = System.currentTimeMillis();
         //放缩
         scale(viewLastScal, 0, 0, shapes);
-        //计算图元的点击区域
+        long time1 = System.currentTimeMillis();
+        Log.e(TAG, "scale耗时：" + (time1 - time0));
+        //计算图元的点击区域 和组合的旋转角度
         doClickZone(shapes);
-        /*//计算组合元素的选择中心
-        doGroupCenter(shapes);*/
+        long time2 = System.currentTimeMillis();
+        Log.e(TAG, "计算点击区间耗时：" + (time2 - time1));
     }
 
 
@@ -875,6 +886,7 @@ public class CoreView extends View implements ScaleGestureDetector.OnScaleGestur
 
     @Override
     public void onScaleEnd(ScaleGestureDetector scaleGestureDetector) {
+        Log.e(TAG, "onScaleEnd");
     }
 
     //是否拖动标识
@@ -906,7 +918,7 @@ public class CoreView extends View implements ScaleGestureDetector.OnScaleGestur
                     break;
                 case MotionEvent.ACTION_MOVE://拖动
                     currentMS2 = System.currentTimeMillis();
-                    if (currentMS2 - currentMS1 < 500) {
+                    if (currentMS2 - currentMS1 < 200) {
                         return true;//解决放缩两指未同时离开屏幕的抖动
                     }
                     //Log.e(TAG, "ACTION_MOVE");

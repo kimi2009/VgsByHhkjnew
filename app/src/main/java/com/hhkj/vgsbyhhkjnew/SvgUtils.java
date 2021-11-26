@@ -1,8 +1,6 @@
 package com.hhkj.vgsbyhhkjnew;
 
 import android.content.Context;
-import android.content.Intent;
-import android.os.Environment;
 import android.text.TextUtils;
 
 import com.google.gson.Gson;
@@ -15,8 +13,6 @@ import com.hhkj.vgsbyhhkjnew.bean.Line;
 import com.hhkj.vgsbyhhkjnew.bean.PolygonGeometry;
 import com.hhkj.vgsbyhhkjnew.bean.RectGeometry;
 import com.hhkj.vgsbyhhkjnew.bean.TextGeometry;
-import com.hhkj.vgsbyhhkjnew.test.BaseBO;
-import com.hhkj.vgsbyhhkjnew.test.BaseBoAdapter;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -59,7 +55,6 @@ public class SvgUtils {
          gson = new GsonBuilder()
                 .registerTypeAdapter(BaseStar.class, new BaseStarAdapter())
                 .create();
-        //gson=new Gson();
     }
 
     public void processSvgFile(String fileName, String sourcePath, String cachePath) {
