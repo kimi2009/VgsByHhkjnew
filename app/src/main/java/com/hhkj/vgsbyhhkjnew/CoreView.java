@@ -27,7 +27,6 @@ import com.hhkj.vgsbyhhkjnew.bean.Point;
 import com.hhkj.vgsbyhhkjnew.bean.PolygonGeometry;
 import com.hhkj.vgsbyhhkjnew.bean.RectGeometry;
 import com.hhkj.vgsbyhhkjnew.bean.TextGeometry;
-import com.qmuiteam.qmui.widget.dialog.QMUITipDialog;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -198,7 +197,7 @@ public class CoreView extends View implements ScaleGestureDetector.OnScaleGestur
         long time0 = System.currentTimeMillis();
         drawVgsView(canvas, shapes);
         long time1 = System.currentTimeMillis();
-        Log.e(TAG, "drawVgsView耗时：" + (time1 - time0));
+        //Log.e(TAG, "drawVgsView耗时：" + (time1 - time0));
         if (isTest) {
             for (int i = 0; i < testClickZone.size(); i++) {
                 canvas.drawRect(new RectF(testClickZone.get(i)[0], testClickZone.get(i)[1], testClickZone.get(i)[2], testClickZone.get(i)[3]), magicPaint);
@@ -217,7 +216,7 @@ public class CoreView extends View implements ScaleGestureDetector.OnScaleGestur
     private void initScaleValue() {
         width = getMeasuredWidth();
         height = getMeasuredHeight();
-        System.out.println("===width:" + width + ";height:" + height);
+        //System.out.println("===width:" + width + ";height:" + height);
         float scalX = width / maxx;
         float scalY = height / maxy;
         initScale = scalX > scalY ? scalY : scalX;
@@ -377,18 +376,33 @@ public class CoreView extends View implements ScaleGestureDetector.OnScaleGestur
         if (shapeLists == null || !(shapeLists.size() > 0)) {
             return;
         }
+        a:
         for (Shape shape : shapeLists) {
             canvas.save();
             switch (shape.getTypes()) {//0.组合
                 case 0:
+                    if (shape.getArea()[0] + getLeft() >= width || shape.getArea()[1] + getTop() >= height || shape.getArea()[2] + getLeft() <= 0 || shape.getArea()[3] + getTop() <= 0) {
+                        //Log.e(TAG, "组合隐藏了");
+                        canvas.restore();
+                        continue a;
+                    }
                     canvas.rotate(shape.getRotateAngle(), shape.getRotateCenterbygroup().getX(), shape.getRotateCenterbygroup().getY());
                     drawVgsView(canvas, shape.shapes);
                     break;
                 case 1://1.线段
                     Line line = (Line) shape.getStar();
                     if (line.getLinepoints().size() == 0) {
-                        continue;
+                        continue a;
                     }
+                    if (line.getPointsValue() != null && line.getPointsValue().size() > 0) {
+                        float[] area = playpolygonRect(line.getPointsValue());
+                        if (area[0] + getLeft() >= width || area[1] + getTop() >= height || area[2] + getLeft() <= 0 || area[3] + getTop() <= 0) {
+                            //Log.e(TAG, "线段隐藏了");
+                            canvas.restore();
+                            continue;
+                        }
+                    }
+
                     float[] floats = new float[line.getLinepoints().size()];
                     for (int i = 0; i < line.getLinepoints().size(); i++) {
                         floats[i] = line.getLinepoints().get(i);
@@ -396,8 +410,6 @@ public class CoreView extends View implements ScaleGestureDetector.OnScaleGestur
                     //旋转
                     Point p0 = playpolygonCenterPoint(line.getPointsValue());
                     canvas.rotate(shape.getRotateAngle(), p0.getX(), p0.getY());
-
-
                     //画
                     if (shape.getLineDashStyle() == 0) {
                         if (!TextUtils.isEmpty(line.getColor())) {
@@ -420,6 +432,13 @@ public class CoreView extends View implements ScaleGestureDetector.OnScaleGestur
                     if (polygonGeometry.getPolygonGeometryLinepoints().size() == 0) {
                         continue;
                     }
+                    if (polygonGeometry.getArea() != null) {
+                        if (polygonGeometry.getArea()[0] + getLeft() >= width || polygonGeometry.getArea()[1] + getTop() >= height || polygonGeometry.getArea()[2] + getLeft() <= 0 || polygonGeometry.getArea()[3] + getTop() <= 0) {
+                            //Log.e(TAG, "多边形隐藏了");
+                            canvas.restore();
+                            continue a;
+                        }
+                    }
                     float[] floats1 = new float[polygonGeometry.getPolygonGeometryLinepoints().size()];
                     for (int i = 0; i < polygonGeometry.getPolygonGeometryLinepoints().size(); i++) {
                         floats1[i] = polygonGeometry.getPolygonGeometryLinepoints().get(i);
@@ -437,6 +456,11 @@ public class CoreView extends View implements ScaleGestureDetector.OnScaleGestur
                 case 3://3.矩形
                     RectGeometry rectGeometry = (RectGeometry) shape.getStar();
                     if (TextUtils.isEmpty(rectGeometry.getRectWidth()) || TextUtils.isEmpty(rectGeometry.getRectHeight())) {
+                        continue a;
+                    }
+                    if (rectGeometry.getValue()[0] + getLeft() >= width || rectGeometry.getValue()[1] + getTop() >= height || rectGeometry.getValue()[2] + getLeft() <= 0 || rectGeometry.getValue()[3] + getTop() <= 0) {
+                        //Log.e(TAG, "矩形隐藏了");
+                        canvas.restore();
                         continue;
                     }
                     Point p1 = playRectCenterPoint(rectGeometry.getValue());
@@ -459,6 +483,11 @@ public class CoreView extends View implements ScaleGestureDetector.OnScaleGestur
                 case 4://4.椭圆
                     EllipseGeometry ellipseGeometry = (EllipseGeometry) shape.getStar();
                     if (TextUtils.isEmpty(ellipseGeometry.getRectWidth()) || TextUtils.isEmpty(ellipseGeometry.getRectHeight())) {
+                        continue a;
+                    }
+                    if (ellipseGeometry.getValue()[0] + getLeft() >= width || ellipseGeometry.getValue()[1] + getTop() >= height || ellipseGeometry.getValue()[2] + getLeft() <= 0 || ellipseGeometry.getValue()[3] + getTop() <= 0) {
+                        //Log.e(TAG, "圆隐藏了");
+                        canvas.restore();
                         continue;
                     }
                     Point p1ellipseGeometry = playRectCenterPoint(ellipseGeometry.getValue());
@@ -476,6 +505,11 @@ public class CoreView extends View implements ScaleGestureDetector.OnScaleGestur
                 case 5://5.文字
                     TextGeometry textGeometry = (TextGeometry) shape.getStar();
                     if (TextUtils.isEmpty(textGeometry.getRectWidth()) || TextUtils.isEmpty(textGeometry.getRectHeight())) {
+                        continue a;
+                    }
+                    if (textGeometry.getValue()[0] + getLeft() >= width || textGeometry.getValue()[1] + getTop() >= height || textGeometry.getValue()[2] + getLeft() <= 0 || textGeometry.getValue()[3] + getTop() <= 0) {
+                        //Log.e(TAG, "文字隐藏了");
+                        canvas.restore();
                         continue;
                     }
                     if (Float.parseFloat(textGeometry.getRectWidth()) == 0f && Float.parseFloat(textGeometry.getRectHeight()) == 0f) {
@@ -600,7 +634,7 @@ public class CoreView extends View implements ScaleGestureDetector.OnScaleGestur
     @Override
     public boolean onScale(ScaleGestureDetector detector) {
         float scaleFactor = detector.getScaleFactor();
-        Log.e(TAG, "scaleFactor：" + scaleFactor);
+        //Log.e(TAG, "scaleFactor：" + scaleFactor);
 
         /*if (scaleFactor > 0.99 && scaleFactor < 1.03) {
             return true;
@@ -667,11 +701,11 @@ public class CoreView extends View implements ScaleGestureDetector.OnScaleGestur
         //放缩
         scale(viewLastScal, 0, 0, shapes);
         long time1 = System.currentTimeMillis();
-        Log.e(TAG, "scale耗时：" + (time1 - time0));
+        //Log.e(TAG, "scale耗时：" + (time1 - time0));
         //计算图元的点击区域 和组合的旋转角度
         doClickZone(shapes);
         long time2 = System.currentTimeMillis();
-        Log.e(TAG, "计算点击区间耗时：" + (time2 - time1));
+        //Log.e(TAG, "计算点击区间耗时：" + (time2 - time1));
     }
 
 
@@ -681,6 +715,7 @@ public class CoreView extends View implements ScaleGestureDetector.OnScaleGestur
      * @param shapeLists
      */
     private void doClickZone(ArrayList<Shape> shapeLists) {
+        //Log.e(TAG, "doClickZone计算点击区域");
         for (Shape shape : shapeLists) {
             switch (shape.getTypes()) {//0.组合
                 case 0:
@@ -772,6 +807,7 @@ public class CoreView extends View implements ScaleGestureDetector.OnScaleGestur
     }
 
     private void initClickBoundary(ArrayList<Shape> shapeLists, ArrayList xList, ArrayList yList) {
+
         for (Shape shape : shapeLists) {
             switch (shape.getTypes()) {//0.组合
                 case 0:
@@ -886,7 +922,7 @@ public class CoreView extends View implements ScaleGestureDetector.OnScaleGestur
 
     @Override
     public void onScaleEnd(ScaleGestureDetector scaleGestureDetector) {
-        Log.e(TAG, "onScaleEnd");
+        //Log.e(TAG, "onScaleEnd");
     }
 
     //是否拖动标识
@@ -910,10 +946,11 @@ public class CoreView extends View implements ScaleGestureDetector.OnScaleGestur
         if (pointerCount == 1) {
             switch (event.getAction()) {
                 case MotionEvent.ACTION_DOWN://单击
-                    // Log.e(TAG, "ACTION_DOWN==");
+                    //Log.e(TAG, "ACTION_DOWN==");
                     isDrag = false;
                     downX = event.getRawX(); // 点击触屏时的x坐标 用于离开屏幕时的x坐标作计算
                     downY = event.getRawY(); // 点击触屏时的y坐标 用于离开屏幕时的y坐标作计算
+                    //Log.e(TAG, "ACTION_DOWN==" + downX + ";" + downY);
                     currentMS = System.currentTimeMillis();//long currentMS     获取系统时间
                     break;
                 case MotionEvent.ACTION_MOVE://拖动
@@ -922,9 +959,9 @@ public class CoreView extends View implements ScaleGestureDetector.OnScaleGestur
                         return true;//解决放缩两指未同时离开屏幕的抖动
                     }
                     //Log.e(TAG, "ACTION_MOVE");
-                    dx = event.getRawX() - downX;
+                    dx = event.getRawX() - downX;//event.getRawX()为屏幕坐标，0<event.getRawX()<1920
                     dy = event.getRawY() - downY;
-                    //Log.e(TAG, "dx：" + dx + ";dy:" + dy);
+                    // Log.e(TAG, "dx：" + dx + ";dy:" + dy);
                     int l, r, t, b; // 上下左右四点移动后的偏移量
                     //计算偏移量 设置偏移量 = 20 时 为判断点击事件和滑动事件的峰值
                     if (Math.abs(dx) > 20 || Math.abs(dy) > 20) {
@@ -933,7 +970,7 @@ public class CoreView extends View implements ScaleGestureDetector.OnScaleGestur
                         r = (int) (l + viewWidth);
                         t = (int) (getTop() + dy);
                         b = (int) (t + viewHeight);
-                        // Log.e(TAG, "l-：" + l + ";t-:" + t + ";r-:" + r + ";b-:" + b);
+                        //Log.e(TAG, "l-：" + l + ";t-:" + t + ";r-:" + r + ";b-:" + b);
                         // 如果你的需求是可以划出边界 此时你要计算可以划出边界的偏移量
                         // 最大不能超过自身宽度或者是高度
                         if (dx < 0) {//往左滑动
@@ -989,7 +1026,6 @@ public class CoreView extends View implements ScaleGestureDetector.OnScaleGestur
                     }
                     break;
                 case MotionEvent.ACTION_CANCEL:
-                    //Log.e(TAG, "ACTION_UP");
                     break;
             }
         } else if (pointerCount > 1) {//放缩
